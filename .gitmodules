@@ -1,0 +1,6 @@
+[submodule "stack"]
+	path = stack
+	url = https://github.com/SeveraTheDuck/stack
+[submodule "FileOpenLib"]
+	path = FileOpenLib
+	url = https://github.com/SeveraTheDuck/FileOpenLib
