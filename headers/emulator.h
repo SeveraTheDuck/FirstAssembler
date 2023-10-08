@@ -3,7 +3,10 @@
 
 #include "../FileOpenLib/filestruct.h"
 #include "../stack/headers/stack.h"
+#include "translator.h"
 
-void EmulateCPU (file_input* const asm_code);
+void ProcessSPU (const char* const spu_file_name);
+
+void Processor (file_input* const asm_code);
 
 #endif

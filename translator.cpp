@@ -1,10 +1,26 @@
 #include "headers/translator.h"
 
-FILE* TranslateFile (file_input* const original_file)
+void TranslateFile (const char* const original_file_name,
+                    const char* const translated_file_name)
+{
+    assert (original_file_name);
+    assert (translated_file_name);
+
+    file_input original_file = {};
+    GetFileInput (original_file_name, &original_file, PARTED);
+
+    FILE* translated_file = fopen (translated_file_name, "wb");
+    assert     (translated_file);
+    Translator (&original_file, translated_file);
+
+    FreeFileInput (&original_file);
+    fclose (translated_file);
+}
+
+FILE* Translator (file_input* const original_file,
+                  FILE*       const translated_file)
 {
     assert (original_file);
-
-    FILE*   translated_file = fopen ("translated.txt", "wb");
     assert (translated_file);
 
     char operation[100] = {}; // is it worth it?

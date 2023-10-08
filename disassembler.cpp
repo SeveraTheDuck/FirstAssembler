@@ -1,10 +1,27 @@
 #include "headers/disassembler.h"
 
-FILE* DecodeFile (file_input* const translated_file)
+void DecodeFile (const char* const translated_file_name,
+                 const char* const decoded_file_name)
+{
+    assert (translated_file_name);
+    assert (decoded_file_name);
+
+    file_input translated_file = {};
+    GetFileInput (translated_file_name, &translated_file, PARTED);
+
+    FILE* decoded_file = fopen (decoded_file_name, "wb");
+    assert  (decoded_file);
+    Decoder (&translated_file, decoded_file);
+
+    FreeFileInput (&translated_file);
+    fclose (decoded_file);
+}
+
+FILE* Decoder (file_input* const translated_file,
+               FILE*       const decoded_file)
 {
     assert (translated_file);
-    FILE*  decoded_file = fopen ("decoded.txt", "wb");
-    assert(decoded_file);
+    assert (decoded_file);
 
     int n_operation = 0;
     int push_value  = 0;

@@ -29,9 +29,13 @@ enum operations_decode
     ASM_OUT
 };
 
+void TranslateFile (const char* const original_file_name,
+                    const char* const translated_file_name);
+
 /// @brief This function translates original file with operations into asm language.
 /// @param original_file Pointer to struct with information about original file.
 /// @return Pointer to opened translated file on asm language.
-FILE* TranslateFile (file_input* const original_file);
+FILE* Translator (file_input* const original_file,
+                  FILE*       const translated_file);
 
 #endif
