@@ -23,7 +23,7 @@ void EmulateCPU (file_input* const asm_code)
                 break;
 
             case 1:
-                r_operator = atoi (asm_code-> lines_array[n_line].line +
+                r_operator = atoi (asm_code->lines_array[n_line].line +
                                    strlen ("1 "));
                 StackPush (&stk, r_operator);
                 STACK_DUMP (&stk);

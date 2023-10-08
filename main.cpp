@@ -21,13 +21,13 @@ int main (int /*argc*/, char** /*argv*/)
 
     FreeFileInput (&tr_file);
     fclose (decoded_file);
-
-    // CPU
-    file_input asm_code = {};
-    GetFileInput ("translated.txt", &asm_code, PARTED);
-    EmulateCPU (&asm_code);
-
-    FreeFileInput (&asm_code);
+//
+//     // CPU
+//     file_input asm_code = {};
+//     GetFileInput ("translated.txt", &asm_code, PARTED);
+//     EmulateCPU (&asm_code);
+//
+//     FreeFileInput (&asm_code);
 
     return 0;
 }

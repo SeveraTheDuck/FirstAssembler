@@ -3,20 +3,25 @@
 FILE* DecodeFile (file_input* const translated_file)
 {
     assert (translated_file);
-    FILE* decoded_file = fopen ("decoded.txt", "wb");
+    FILE*  decoded_file = fopen ("decoded.txt", "wb");
     assert(decoded_file);
 
     int n_operation = 0;
+    int push_value  = 0;
 
-    for (size_t n_line = 0; n_line < translated_file->number_of_lines; ++n_line)
+    for (size_t n_line = 0;
+                n_line < translated_file->number_of_lines;
+              ++n_line)
     {
-        n_operation = atoi (translated_file->lines_array[n_line].line);
+        sscanf  (translated_file->lines_array[n_line].line,
+                 "%d", &n_operation);
         fprintf (decoded_file, "%s", operations_array[n_operation]);
 
-        if (n_operation == 1)
+        if (n_operation == ASM_PUSH)
         {
-            fprintf (decoded_file, " %s",
-                     translated_file->lines_array[n_line].line + strlen ("1 "));
+            sscanf  (translated_file->lines_array[n_line].line,
+                     "%d %d", &n_operation, &push_value);
+            fprintf (decoded_file, " %d", push_value);
         }
 
         fprintf (decoded_file, "\n");

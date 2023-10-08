@@ -3,44 +3,36 @@
 FILE* TranslateFile (file_input* const original_file)
 {
     assert (original_file);
+
     FILE*   translated_file = fopen ("translated.txt", "wb");
     assert (translated_file);
 
+    char operation[100] = {}; // is it worth it?
+    int  push_value = 0;
+
     for (size_t n_line = 0; n_line < original_file->number_of_lines; ++n_line)
     {
-        for (size_t n_operator = 0;
-                    n_operator < OPERATIONS_NUMBER;
-                  ++n_operator)
+        sscanf (original_file->lines_array[n_line].line, "%s", operation);
+
+        for (size_t n_operation = 0;
+                    n_operation < OPERATIONS_NUMBER;
+                  ++n_operation)
         {
-            // "push" defined as first operation, it has different syntax
-            if (n_operator == 1)
+            if (!strcmp (operation, operations_array[n_operation]))
             {
-                if (strstr (original_file->lines_array[n_line].line, "push ") ==
-                            original_file->lines_array[n_line].line)
+                fprintf (translated_file, "%zd", n_operation);
+
+                if (n_operation == ASM_PUSH)
                 {
-                    fprintf (translated_file, "%zd ", n_operator);
-                    PrintPushValue (translated_file,
-                                    original_file->lines_array[n_line].line);
-
-                    break;
+                    sscanf (original_file->lines_array[n_line].line,
+                            "%s %d", operation, &push_value); // skip push operation
+                    fprintf (translated_file, " %d", push_value);
                 }
-            }
-            if (!strcmp (original_file->lines_array[n_line].line,
-                         operations_array[n_operator]))
-            {
-                fprintf (translated_file, "%zd\n", n_operator);
 
-                break;
+                fprintf (translated_file, "\n");
             }
         }
     }
 
     return translated_file;
-}
-
-void PrintPushValue (FILE* const translated_file,
-                     const char* const line)
-{
-    int dec = atoi (line + strlen ("push "));
-    fprintf (translated_file, "%d\n", dec);
 }
