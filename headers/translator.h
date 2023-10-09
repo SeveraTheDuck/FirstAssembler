@@ -5,13 +5,15 @@
 #include "../FileOpenLib/filestruct.h"
 
 /// @brief This const tells you the number of operations.
-const size_t OPERATIONS_NUMBER = 7;
+const size_t OPERATIONS_NUMBER = 9;
 
 /// @brief This array consists of lines of operations.
 /// It is used to make ordered list of operations without explicit number list,
 /// just using indexes.
 const char* const operations_array[OPERATIONS_NUMBER] = {"hlt",
                                                          "push",
+                                                         "pop",
+                                                         "in",
                                                          "add",
                                                          "sub",
                                                          "mul",
@@ -22,6 +24,8 @@ enum operations_decode
 {
     ASM_HLT = 0,
     ASM_PUSH,
+    ASM_POP,
+    ASM_IN,
     ASM_ADD,
     ASM_SUB,
     ASM_MUL,
@@ -45,6 +49,11 @@ FILE* Translator (file_input* const original_file,
                   FILE*       const translated_file);
 
 void TranslatorPush (file_input* const original_file,
+                     FILE* const translated_file,
+                     const size_t n_line,
+                     char* const operation);
+
+void TranslatorPop  (file_input* const original_file,
                      FILE* const translated_file,
                      const size_t n_line,
                      char* const operation);

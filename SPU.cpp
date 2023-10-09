@@ -85,37 +85,41 @@ SPU_error Processor (file_input* const asm_code,
 
             case ASM_PUSH:
                 SPU_push (spu, asm_code, n_line, n_operation);
-                STACK_DUMP (&spu->stk);
+
+                break;
+
+            case ASM_POP:
+                SPU_pop (spu, asm_code, n_line, n_operation);
+
+                break;
+
+            case ASM_IN:
+                SPU_in (spu);
 
                 break;
 
             case ASM_ADD:
                 SPU_add (spu);
-                STACK_DUMP (&spu->stk);
 
                 break;
 
             case ASM_SUB:
                 SPU_sub (spu);
-                STACK_DUMP (&spu->stk);
 
                 break;
 
             case ASM_MUL:
                 SPU_mul (spu);
-                STACK_DUMP (&spu->stk);
 
                 break;
 
             case ASM_DIV:
                 SPU_div (spu);
-                STACK_DUMP (&spu->stk);
 
                 break;
 
             case ASM_OUT:
                 SPU_out (spu);
-                STACK_DUMP (&spu->stk);
 
                 break;
         }
@@ -126,9 +130,9 @@ SPU_error Processor (file_input* const asm_code,
 }
 
 SPU_error SPU_push (SPU_struct* const spu,
-               file_input* const asm_code,
-               const size_t n_line,
-               int n_operation)
+                    file_input* const asm_code,
+                    const size_t n_line,
+                    int n_operation)
 {
     SPU_VERIFY (spu);
 
@@ -146,6 +150,36 @@ SPU_error SPU_push (SPU_struct* const spu,
     {
         StackPush (&spu->stk, spu->register_vars[push_value]);
     }
+
+    SPU_VERIFY (spu);
+    return spu->spu_errors_list;
+}
+
+SPU_error SPU_pop (SPU_struct* const spu,
+                   file_input* const asm_code,
+                   const size_t n_line,
+                   int n_operation)
+{
+    SPU_VERIFY (spu);
+
+    int reg_number = 0;
+    sscanf (asm_code->lines_array[n_line].line, "%d %d",
+            &n_operation, &reg_number);
+
+    StackPop (&spu->stk, &spu->register_vars[reg_number]);
+
+    SPU_VERIFY (spu);
+    return spu->spu_errors_list;
+}
+
+SPU_error SPU_in (SPU_struct* const spu)
+{
+    SPU_VERIFY (spu);
+
+    int in_value = 0;
+    printf ("Enter in value:\n");
+    scanf ("%d", &in_value);
+    StackPush (&spu->stk, in_value);
 
     SPU_VERIFY (spu);
     return spu->spu_errors_list;

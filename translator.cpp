@@ -43,6 +43,12 @@ FILE* Translator (file_input* const original_file,
                                     n_line, operation);
                 }
 
+                else if (n_operation == ASM_POP)
+                {
+                    TranslatorPop (original_file, translated_file,
+                                   n_line, operation);
+                }
+
                 fprintf (translated_file, "\n");
             }
         }
@@ -60,9 +66,9 @@ void TranslatorPush (file_input* const original_file,
     assert (translated_file);
     assert (operation);
 
-    int push_value = 0;
-    int push_check = 0;
-    char push_reg  = 0;
+    int  push_value = 0;
+    int  push_check = 0;
+    char push_reg   = 0;
 
     if (sscanf (original_file->lines_array[n_line].line,
                 "%s %d", operation, &push_value) == 2)
@@ -76,4 +82,20 @@ void TranslatorPush (file_input* const original_file,
                 &push_reg, &push_check);
         fprintf (translated_file, " %d %d", REGISTER_REGIME, push_reg - 'a');
     }
+}
+
+void TranslatorPop (file_input* const original_file,
+                    FILE* const translated_file,
+                    const size_t n_line,
+                    char* const operation)
+{
+    assert (original_file);
+    assert (translated_file);
+    assert (operation);
+
+    char pop_reg = 0;
+
+    sscanf (original_file->lines_array[n_line].line,
+            "%s r%[abcd]x", operation, &pop_reg);
+    fprintf (translated_file, " %d", pop_reg - 'a');
 }

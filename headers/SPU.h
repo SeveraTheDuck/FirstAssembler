@@ -49,9 +49,16 @@ SPU_error Processor (file_input* const asm_code,
                 SPU_struct* const spu);
 
 SPU_error SPU_push (SPU_struct* const spu,
-               file_input* const asm_code,
-               const size_t n_line,
-               int n_operation);
+                    file_input* const asm_code,
+                    const size_t n_line,
+                    int n_operation);
+
+SPU_error SPU_pop (SPU_struct* const spu,
+                   file_input* const asm_code,
+                   const size_t n_line,
+                   int n_operation);
+
+SPU_error SPU_in   (SPU_struct* const spu);
 
 SPU_error SPU_add  (SPU_struct* const spu);
 

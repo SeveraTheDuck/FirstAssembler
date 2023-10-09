@@ -1,9 +1,17 @@
-push 3000
-push 2000
+in
+pop rax
+in
+pop rbx
+in
+pop rcx
+push rbx
+push rbx
+mul
+push 4
+push rax
+push rcx
+mul
+mul
 sub
-push 3
-push 10
-sub
-div
 out
 hlt

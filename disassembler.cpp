@@ -39,6 +39,12 @@ FILE* Decoder (file_input* const translated_file,
                         n_line, n_operation);
         }
 
+        else if (n_operation == ASM_POP)
+        {
+            DecodePop (translated_file, decoded_file,
+                        n_line, n_operation);
+        }
+
         fprintf (decoded_file, "\n");
     }
 
@@ -67,4 +73,20 @@ void DecodePush (file_input* const translated_file,
     {
         fprintf (decoded_file, " %d", push_value);
     }
+}
+
+void DecodePop (file_input* const translated_file,
+                FILE* const decoded_file,
+                const size_t n_line,
+                int n_operation)
+{
+    assert (translated_file);
+    assert (decoded_file);
+
+    int pop_value  = 0;
+
+    sscanf (translated_file->lines_array[n_line].line,
+            "%d %d", &n_operation, &pop_value);
+
+    fprintf (decoded_file, " r%cx", pop_value + 'a');
 }

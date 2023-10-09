@@ -17,4 +17,9 @@ void DecodePush (file_input* const translated_file,
                  const size_t n_line,
                  const int n_operation);
 
+void DecodePop (file_input* const translated_file,
+                FILE* const decoded_file,
+                const size_t n_line,
+                int n_operation);
+
 #endif
