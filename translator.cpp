@@ -24,7 +24,6 @@ FILE* Translator (file_input* const original_file,
     assert (translated_file);
 
     char operation[100] = {}; // is it worth it?
-    int  push_value = 0;
 
     for (size_t n_line = 0; n_line < original_file->number_of_lines; ++n_line)
     {
@@ -40,9 +39,8 @@ FILE* Translator (file_input* const original_file,
 
                 if (n_operation == ASM_PUSH)
                 {
-                    sscanf (original_file->lines_array[n_line].line,
-                            "%s %d", operation, &push_value); // skip push operation
-                    fprintf (translated_file, " %d", push_value);
+                    TranslatorPush (original_file, translated_file,
+                                    n_line, operation);
                 }
 
                 fprintf (translated_file, "\n");
@@ -51,4 +49,31 @@ FILE* Translator (file_input* const original_file,
     }
 
     return translated_file;
+}
+
+void TranslatorPush (file_input* const original_file,
+                     FILE* const translated_file,
+                     const size_t n_line,
+                     char* const operation)
+{
+    assert (original_file);
+    assert (translated_file);
+    assert (operation);
+
+    int push_value = 0;
+    int push_check = 0;
+    char push_reg  = 0;
+
+    if (sscanf (original_file->lines_array[n_line].line,
+                "%s %d", operation, &push_value) == 2)
+    {
+        fprintf (translated_file, " %d %d", STANDART_REGIME, push_value);
+    }
+    else
+    {
+        sscanf (original_file->lines_array[n_line].line,
+                "%s r%[abcd]%n", operation,
+                &push_reg, &push_check);
+        fprintf (translated_file, " %d %d", REGISTER_REGIME, push_reg - 'a');
+    }
 }

@@ -12,4 +12,9 @@ void DecodeFile (const char* const translated_file_name,
 FILE* Decoder (file_input* const translated_file,
                FILE*       const decoded_file);
 
+void DecodePush (file_input* const translated_file,
+                 FILE* const decoded_file,
+                 const size_t n_line,
+                 const int n_operation);
+
 #endif

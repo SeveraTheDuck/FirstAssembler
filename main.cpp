@@ -1,6 +1,6 @@
 #include "headers/translator.h"
 #include "headers/disassembler.h"
-#include "headers/emulator.h"
+#include "headers/SPU.h"
 
 int main (int /*argc*/, char** /*argv*/)
 {
@@ -11,7 +11,7 @@ int main (int /*argc*/, char** /*argv*/)
     DecodeFile ("translated.txt", "decoded.txt");
 
     // SPU
-    ProcessSPU ("translated.txt");
+    SPU_process ("translated.txt");
 
     return 0;
 }

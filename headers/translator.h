@@ -29,6 +29,12 @@ enum operations_decode
     ASM_OUT
 };
 
+enum PushRegime
+{
+    STANDART_REGIME = 1,
+    REGISTER_REGIME = 2,
+};
+
 void TranslateFile (const char* const original_file_name,
                     const char* const translated_file_name);
 
@@ -37,5 +43,10 @@ void TranslateFile (const char* const original_file_name,
 /// @return Pointer to opened translated file on asm language.
 FILE* Translator (file_input* const original_file,
                   FILE*       const translated_file);
+
+void TranslatorPush (file_input* const original_file,
+                     FILE* const translated_file,
+                     const size_t n_line,
+                     char* const operation);
 
 #endif

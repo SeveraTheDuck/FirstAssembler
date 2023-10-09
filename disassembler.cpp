@@ -24,7 +24,6 @@ FILE* Decoder (file_input* const translated_file,
     assert (decoded_file);
 
     int n_operation = 0;
-    int push_value  = 0;
 
     for (size_t n_line = 0;
                 n_line < translated_file->number_of_lines;
@@ -36,13 +35,36 @@ FILE* Decoder (file_input* const translated_file,
 
         if (n_operation == ASM_PUSH)
         {
-            sscanf  (translated_file->lines_array[n_line].line,
-                     "%d %d", &n_operation, &push_value);
-            fprintf (decoded_file, " %d", push_value);
+            DecodePush (translated_file, decoded_file,
+                        n_line, n_operation);
         }
 
         fprintf (decoded_file, "\n");
     }
 
     return decoded_file;
+}
+
+void DecodePush (file_input* const translated_file,
+                 FILE* const decoded_file,
+                 const size_t n_line,
+                 int n_operation)
+{
+    assert (translated_file);
+    assert (decoded_file);
+
+    int push_regime = STANDART_REGIME;
+    int push_value  = 0;
+
+    sscanf (translated_file->lines_array[n_line].line,
+            "%d %d %d", &n_operation, &push_regime, &push_value);
+
+    if (push_regime == REGISTER_REGIME)
+    {
+        fprintf (decoded_file, " r%cx", push_value + 'a');
+    }
+    else
+    {
+        fprintf (decoded_file, " %d", push_value);
+    }
 }
