@@ -1,7 +1,9 @@
 #include "headers/translator.h"
 
 static const size_t CMD_MAX_LENGTH = 256;
-static char   translated_string[4096] = {};
+static const size_t FILE_MAX_SIZE  = 4096;
+
+static char   translated_string[FILE_MAX_SIZE] = {};
 static size_t translated_string_index = 0;
 
 void TranslateFile (const char* const original_file_name,
@@ -26,10 +28,12 @@ void TranslateFile (const char* const original_file_name,
     {                                                                       \
         *(int*)(void*) (translated_string +                                 \
                         translated_string_index) = ASM_##function_name;     \
+        operation_addresses[translated_operations_number++] =               \
+                            translated_string_index;                        \
         translated_string_index += sizeof (int);                            \
                                                                             \
-        if (n_args) ReadArgument (original_file, n_line,                    \
-                                  operation, (function_number));            \
+        if (n_args) ReadArgument (original_file, operation_addresses,       \
+                                  n_line, operation, (function_number));    \
     }                                                                       \
     else
 
@@ -40,6 +44,9 @@ FILE* Translator (file_input* const original_file,
     assert (translated_file);
 
     char operation[CMD_MAX_LENGTH] = {};
+
+    size_t operation_addresses[FILE_MAX_SIZE] = {};
+    size_t translated_operations_number = 0;
 
     for (size_t n_line = 0; n_line < original_file->number_of_lines; ++n_line)
     {
@@ -56,6 +63,7 @@ FILE* Translator (file_input* const original_file,
 #undef DEF_CMD
 
 void ReadArgument (const file_input* const original_file,
+                   const size_t* operation_addresses,
                    const size_t n_line,
                    char* const operation,
                    const int function_number)
@@ -67,33 +75,57 @@ void ReadArgument (const file_input* const original_file,
     if (sscanf (original_file->lines_array[n_line].line,
         "%s %d", operation, &d_arg) == 2)
     {
-        TranslateArgument (STANDART_REGIME, d_arg, function_number);
+        TranslateArgument (STANDART_REGIME, operation_addresses,
+                           d_arg, function_number);
     }
 
     else if (sscanf (original_file->lines_array[n_line].line,
         "%s r%[abcd]x%n", operation, c_arg, &n_read_args) == 2)
     {
-        TranslateArgument (REGISTER_REGIME, c_arg[0] - 'a', function_number);
+        TranslateArgument (REGISTER_REGIME, operation_addresses,
+                           c_arg[0] - 'a', function_number);
     }
 }
 
 void TranslateArgument (const PushRegime push_regime,
+                        const size_t* operation_addresses,
                         const int  translated_value,
                         const int  function_number)
 {
-    int translated_push = ASM_PUSH;
-
-    if (function_number == ASM_PUSH)
+    switch (function_number)
     {
-        translated_push |= push_regime;
+        case ASM_PUSH:
+        {
+            TranslatePushOperation (push_regime);
+            break;
+        }
 
-        translated_string_index -= sizeof (int);
-        *(int*)(void*) (translated_string +
-                        translated_string_index) = translated_push;
-        translated_string_index += sizeof (int);
+        case ASM_JMP:
+        {
+            TranslateJmpOperation (translated_value, operation_addresses);
+            break;
+        }
     }
 
     *(int*)(void*) (translated_string +
                     translated_string_index) = translated_value;
+    translated_string_index += sizeof (int);
+}
+
+void TranslatePushOperation (const PushRegime push_regime)
+{
+    int translated_push = ASM_PUSH | push_regime;
+
+    translated_string_index -= sizeof (int);
+    *(int*)(void*) (translated_string +
+                    translated_string_index) = translated_push;
+    translated_string_index += sizeof (int);
+}
+
+void TranslateJmpOperation (const int translated_value,
+                            const size_t* operation_addresses)
+{
+    *(int*)(void*) (translated_string + translated_string_index) =
+              (int) operation_addresses[translated_value];
     translated_string_index += sizeof (int);
 }

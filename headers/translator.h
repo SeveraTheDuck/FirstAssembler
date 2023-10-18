@@ -47,12 +47,19 @@ FILE* Translator (file_input* const original_file,
                   FILE*       const translated_file);
 
 void ReadArgument (const file_input* const original_file,
+                   const size_t* operation_addresses,
                    const size_t n_line,
                    char* const operation,
                    const int function_number);
 
 void TranslateArgument (const PushRegime push_regime,
+                        const size_t* operation_addresses,
                         const int  translated_value,
                         const int  function_number);
+
+void TranslatePushOperation (const PushRegime push_regime);
+
+void TranslateJmpOperation (const int translated_value,
+                            const size_t* operation_addresses);
 
 #endif

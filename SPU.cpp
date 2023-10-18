@@ -1,5 +1,5 @@
 #include "headers/SPU.h"
-// ГДЕ-ТО UB BLYAT
+
 static const size_t MAX_FILE_SIZE = 4096;
 
 SPU_error SPU_CTOR (SPU_struct* const spu,
@@ -95,11 +95,6 @@ void SPU_process (const char* const spu_file_name)
 
 #define DEF_CMD(function_name, function_number, n_args, action) \
     case ASM_##function_name:                                   \
-        if (cmd_array[current_operation] <= code_index - sizeof (int))\
-        {\
-            cmd_array[current_operation++] = code_index - sizeof (int);\
-            fprintf (stderr, "I am new cmd_array unit %zd\nI am function %s\n\n", cmd_array[current_operation - 1], #function_name);\
-        }\
         SPU_VERIFY (spu);                                       \
         action                                                  \
         SPU_VERIFY (spu);                                       \
@@ -115,9 +110,6 @@ SPU_error Processor (const char spu_code[MAX_FILE_SIZE],
     int n_operation = 0;
     size_t code_index = 0;
 
-    size_t* cmd_array = (size_t*) calloc (code_length / 2, sizeof (size_t*));
-    size_t current_operation = 0;
-
     while (code_index < code_length)
     {
         n_operation = *(int*)(void*) (spu_code + code_index);
@@ -130,7 +122,6 @@ SPU_error Processor (const char spu_code[MAX_FILE_SIZE],
     }
 
     SPU_VERIFY (spu);
-    free (cmd_array);
     return spu->spu_errors_list;
 }
 

@@ -96,7 +96,5 @@ DEF_CMD (OUT, 8, 0,
 DEF_CMD (JMP, 9, 1,
 {
     int dest_operation = *(int*)(void*) (spu_code + code_index);
-    fprintf (stderr, "I am dest_operation %d \n", dest_operation);
-    code_index = cmd_array[dest_operation];
-    fprintf (stderr, "I am cmd_array %zd \n", cmd_array[dest_operation]);
+    code_index = (size_t) dest_operation;
 })
