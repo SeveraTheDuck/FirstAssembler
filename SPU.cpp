@@ -1,22 +1,30 @@
 #include "headers/SPU.h"
+// ГДЕ-ТО UB BLYAT
+static const size_t MAX_FILE_SIZE = 4096;
 
-SPU_error SPU_CTOR (SPU_struct* const spu)
+SPU_error SPU_CTOR (SPU_struct* const spu,
+                    SPU_CTOR_RECIVE_INFO)
 {
     assert (spu);
     assert (spu->register_vars);
 
     STACK_CTOR (&spu->stk);
 
+    spu->init_line = init_line;
+    spu->init_file = init_file;
+    spu->init_func = init_func;
+
     for (size_t i = 0; i < REG_NUMBER; ++i)
     {
         spu->register_vars[i] = 0;
     }
 
-    spu->spu_errors_list = {};
+    memset (&spu->spu_errors_list, 0, sizeof (SPU_error));
 
     SPU_VERIFY (spu);
     return spu->spu_errors_list;
 }
+
 
 SPU_error SPU_DTOR (SPU_struct* spu)
 {
@@ -34,226 +42,96 @@ SPU_error SPU_DTOR (SPU_struct* spu)
     return spu->spu_errors_list;
 }
 
-SPU_error SPU_verify (SPU_struct* spu)
+SPU_error_t SPU_verify (SPU_struct* spu)
 {
+    SPU_error_t spu_error_occured = 0;
     if (!spu)
     {
-        SPU_error spu_nullptr = { 1 };
+        SPU_error_t spu_nullptr = 1;
         return spu_nullptr;
     }
 
-    if (StackVerify (&spu->stk))
+    if (StackVerify (&(spu->stk)))
     {
-        spu->spu_errors_list.SPU_STACK_ERR = 1;
+        spu_error_occured = 1;
     }
 
-    return spu->spu_errors_list;
+    return spu_error_occured;
+}
+
+void SPU_dump (SPU_struct* spu, SPU_DUMP_RECIEVE_INFO)
+{
+    fprintf (stderr, "\nSPU WAS DUMPED\n");
+    fprintf (stderr, "SPU [%p]\nfrom %s(%zd) %s()\n",
+                                                  spu,
+                                                  spu->init_file,
+                                                  spu->init_line,
+                                                  spu->init_func);
+    fprintf (stderr, "called from %s(%d) %s()\n", file_name, line, func_name);
+    STACK_DUMP (&spu->stk);
 }
 
 void SPU_process (const char* const spu_file_name)
 {
     assert (spu_file_name);
 
-    file_input asm_code = {};
-    GetFileInput (spu_file_name, &asm_code, PARTED);
+    FILE* spu_file = fopen (spu_file_name, "rb");
+    assert (spu_file);
+
+    char spu_code[MAX_FILE_SIZE] = {};
+    size_t code_length = 0;
+    code_length = fread (spu_code, sizeof (char), MAX_FILE_SIZE,
+                         spu_file);
+
+    fclose(spu_file);
 
     SPU_struct spu = {};
-    SPU_CTOR (&spu);
+    SPU_CTOR (&spu, SPU_GET_ELEM_INFO);
 
-    Processor     (&asm_code, &spu);
+    Processor (spu_code, code_length, &spu);
 
-    FreeFileInput (&asm_code);
     SPU_DTOR (&spu);
 }
 
-SPU_error Processor (file_input* const asm_code,
+#define DEF_CMD(function_name, function_number, n_args, action) \
+    case ASM_##function_name:                                   \
+        if (cmd_array[current_operation] <= code_index - sizeof (int))\
+        {\
+            cmd_array[current_operation++] = code_index - sizeof (int);\
+            fprintf (stderr, "I am new cmd_array unit %zd\nI am function %s\n\n", cmd_array[current_operation - 1], #function_name);\
+        }\
+        SPU_VERIFY (spu);                                       \
+        action                                                  \
+        SPU_VERIFY (spu);                                       \
+        break;
+
+SPU_error Processor (const char spu_code[MAX_FILE_SIZE],
+                     const size_t code_length,
                      SPU_struct* const spu)
 {
-    assert (asm_code);
+    assert (spu_code);
     SPU_VERIFY (spu);
 
     int n_operation = 0;
+    size_t code_index = 0;
 
-    for (size_t n_line = 0; n_line < asm_code->number_of_lines; ++n_line)
+    size_t* cmd_array = (size_t*) calloc (code_length / 2, sizeof (size_t*));
+    size_t current_operation = 0;
+
+    while (code_index < code_length)
     {
-        sscanf (asm_code->lines_array[n_line].line, "%d", &n_operation);
-        switch (n_operation)
+        n_operation = *(int*)(void*) (spu_code + code_index);
+        code_index += sizeof (int);
+
+        switch (n_operation & 0x3F)
         {
-            case ASM_HLT:
-                return spu->spu_errors_list;
-                break;
-
-            case ASM_PUSH:
-                SPU_push (spu, asm_code, n_line, n_operation);
-
-                break;
-
-            case ASM_POP:
-                SPU_pop (spu, asm_code, n_line, n_operation);
-
-                break;
-
-            case ASM_IN:
-                SPU_in (spu);
-
-                break;
-
-            case ASM_ADD:
-                SPU_add (spu);
-
-                break;
-
-            case ASM_SUB:
-                SPU_sub (spu);
-
-                break;
-
-            case ASM_MUL:
-                SPU_mul (spu);
-
-                break;
-
-            case ASM_DIV:
-                SPU_div (spu);
-
-                break;
-
-            case ASM_OUT:
-                SPU_out (spu);
-
-                break;
+            #include "headers/commands.h"
         }
     }
 
     SPU_VERIFY (spu);
+    free (cmd_array);
     return spu->spu_errors_list;
 }
 
-SPU_error SPU_push (SPU_struct* const spu,
-                    file_input* const asm_code,
-                    const size_t n_line,
-                    int n_operation)
-{
-    SPU_VERIFY (spu);
-
-    int push_regime = STANDART_REGIME;
-    int push_value = 0;
-
-    sscanf (asm_code->lines_array[n_line].line, "%d %d %d",
-            &n_operation, &push_regime, &push_value);
-
-    if (push_regime == STANDART_REGIME)
-    {
-        StackPush (&spu->stk, push_value);
-    }
-    else
-    {
-        StackPush (&spu->stk, spu->register_vars[push_value]);
-    }
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
-
-SPU_error SPU_pop (SPU_struct* const spu,
-                   file_input* const asm_code,
-                   const size_t n_line,
-                   int n_operation)
-{
-    SPU_VERIFY (spu);
-
-    int reg_number = 0;
-    sscanf (asm_code->lines_array[n_line].line, "%d %d",
-            &n_operation, &reg_number);
-
-    StackPop (&spu->stk, &spu->register_vars[reg_number]);
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
-
-SPU_error SPU_in (SPU_struct* const spu)
-{
-    SPU_VERIFY (spu);
-
-    int in_value = 0;
-    printf ("Enter in value:\n");
-    scanf ("%d", &in_value);
-    StackPush (&spu->stk, in_value);
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
-
-SPU_error SPU_add (SPU_struct* const spu)
-{
-    SPU_VERIFY (spu);
-
-    int l_operator  = 0;
-    int r_operator  = 0;
-
-    StackPop  (&spu->stk, &r_operator);
-    StackPop  (&spu->stk, &l_operator);
-    StackPush (&spu->stk, l_operator + r_operator);
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
-
-SPU_error SPU_sub (SPU_struct* const spu)
-{
-    SPU_VERIFY (spu);
-
-    int l_operator  = 0;
-    int r_operator  = 0;
-
-    StackPop  (&spu->stk, &r_operator);
-    StackPop  (&spu->stk, &l_operator);
-    StackPush (&spu->stk, l_operator - r_operator);
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
-
-SPU_error SPU_mul (SPU_struct* const spu)
-{
-    SPU_VERIFY (spu);
-
-    int l_operator  = 0;
-    int r_operator  = 0;
-
-    StackPop  (&spu->stk, &r_operator);
-    StackPop  (&spu->stk, &l_operator);
-    StackPush (&spu->stk, l_operator * r_operator);
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
-
-SPU_error SPU_div (SPU_struct* const spu)
-{
-    SPU_VERIFY (spu);
-
-    int l_operator  = 0;
-    int r_operator  = 0;
-
-    StackPop  (&spu->stk, &r_operator);
-    StackPop  (&spu->stk, &l_operator);
-    StackPush (&spu->stk, l_operator / r_operator);
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
-
-SPU_error SPU_out (SPU_struct* const spu)
-{
-    SPU_VERIFY (spu);
-
-    int output_value = 0;
-
-    StackPop (&spu->stk, &output_value);
-    printf ("%d", output_value);
-
-    SPU_VERIFY (spu);
-    return spu->spu_errors_list;
-}
+#undef DEF_CMD

@@ -1,8 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+typedef int Processor_t;
+
 /// @brief This typedef defines type for elements of stack. Change it to the type you like.
-typedef int Elem_t;
+typedef Processor_t Elem_t;
 
 /// @brief This const is used for poison value (empty space in stack).
 /// Change it if you have changed Elem_t type or you want to see different value.

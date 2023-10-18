@@ -1,17 +1,11 @@
-in
+push 1
 pop rax
-in
-pop rbx
-in
-pop rcx
-push rbx
-push rbx
-mul
-push 4
 push rax
-push rcx
+push rax
 mul
-mul
-sub
 out
+push rax
+push 1
+add
+jmp 1
 hlt

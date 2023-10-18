@@ -5,7 +5,7 @@
 #include "../FileOpenLib/filestruct.h"
 
 /// @brief This const tells you the number of operations.
-const size_t OPERATIONS_NUMBER = 9;
+const size_t OPERATIONS_NUMBER = 9; //FIXME: fucking hardcore
 
 /// @brief This array consists of lines of operations.
 /// It is used to make ordered list of operations without explicit number list,
@@ -20,23 +20,21 @@ const char* const operations_array[OPERATIONS_NUMBER] = {"hlt",
                                                          "div",
                                                          "out"};
 
+#define DEF_CMD(function_name, function_number, ...) \
+    ASM_##function_name = function_number,
+
 enum operations_decode
 {
-    ASM_HLT = 0,
-    ASM_PUSH,
-    ASM_POP,
-    ASM_IN,
-    ASM_ADD,
-    ASM_SUB,
-    ASM_MUL,
-    ASM_DIV,
-    ASM_OUT
+    #include "commands.h"
+    ASM_VERSION = 2
 };
+
+#undef DEF_CMD
 
 enum PushRegime
 {
-    STANDART_REGIME = 1,
-    REGISTER_REGIME = 2,
+    STANDART_REGIME = 0,
+    REGISTER_REGIME = 0x40
 };
 
 void TranslateFile (const char* const original_file_name,
@@ -48,14 +46,13 @@ void TranslateFile (const char* const original_file_name,
 FILE* Translator (file_input* const original_file,
                   FILE*       const translated_file);
 
-void TranslatorPush (file_input* const original_file,
-                     FILE* const translated_file,
-                     const size_t n_line,
-                     char* const operation);
+void ReadArgument (const file_input* const original_file,
+                   const size_t n_line,
+                   char* const operation,
+                   const int function_number);
 
-void TranslatorPop  (file_input* const original_file,
-                     FILE* const translated_file,
-                     const size_t n_line,
-                     char* const operation);
+void TranslateArgument (const PushRegime push_regime,
+                        const int  translated_value,
+                        const int  function_number);
 
 #endif
