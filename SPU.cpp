@@ -1,6 +1,7 @@
 #include "headers/SPU.h"
 
-static const size_t MAX_FILE_SIZE = 4096;
+static const size_t MAX_FILE_SIZE = 0x1000;
+static const int    OPERATION_NUMBER_MASK = 0x3F;
 
 SPU_error SPU_CTOR (SPU_struct* const spu,
                     SPU_CTOR_RECIVE_INFO)
@@ -115,7 +116,7 @@ SPU_error Processor (const char spu_code[MAX_FILE_SIZE],
         n_operation = *(int*)(void*) (spu_code + code_index);
         code_index += sizeof (int);
 
-        switch (n_operation & 0x3F)
+        switch (n_operation & OPERATION_NUMBER_MASK)
         {
             #include "headers/commands.h"
         }

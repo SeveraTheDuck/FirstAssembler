@@ -1,11 +1,19 @@
-push 1
-pop rax
-push rax
-push rax
-mul
-out
-push rax
-push 1
-add
-jmp 1
-hlt
+        push 1
+:gohere
+        pop rax
+        push rax
+        push rax
+        mul
+        out
+
+        push rax
+        push 1
+        add
+
+        push rax
+        push 1
+        add
+        push 10
+        jae :gohere
+
+        hlt
