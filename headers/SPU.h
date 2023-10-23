@@ -4,15 +4,16 @@
 #include "../FileOpenLib/filestruct.h"
 #include "../stack/headers/stack.h"
 #include "translator.h"
+#include <math.h>
 
 #define SPU_GET_ELEM_INFO __LINE__, __FILE__, __func__
 
-#define SPU_CTOR_RECIVE_INFO const size_t       init_line,\
-                             const char*  const init_file,\
+#define SPU_CTOR_RECIVE_INFO const size_t       init_line,      \
+                             const char*  const init_file,      \
                              const char*  const init_func
 
-#define SPU_DUMP_RECIEVE_INFO const int   line,\
-                              const char* file_name,\
+#define SPU_DUMP_RECIEVE_INFO const int   line,                 \
+                              const char* file_name,            \
                               const char* func_name
 
 #define SPU_VERIFY(spu)                                         \
@@ -32,6 +33,8 @@
     }
 
 const size_t REG_NUMBER = 4;
+const size_t RAM_AMOUNT = 100;
+const int    DOUBLE_PRECISION = 10000; ///< Four digits after the point.
 
 typedef unsigned int SPU_error_t;
 struct SPU_error
@@ -46,6 +49,10 @@ struct SPU_error
 struct SPU_struct
 {
     Stack stk;
+    Stack call_stk;
+
+    Processor_t ram_array[RAM_AMOUNT];
+
     int register_vars[REG_NUMBER];
 
     SPU_error spu_errors_list;
@@ -55,18 +62,19 @@ struct SPU_struct
     const char* init_func;
 };
 
-SPU_error SPU_СTOR     (SPU_struct* spu, SPU_CTOR_RECIVE_INFO);
+SPU_error   SPU_СTOR    (SPU_struct* const spu,
+                         SPU_CTOR_RECIVE_INFO);
 
-SPU_error SPU_DTOR     (SPU_struct* spu);
+SPU_error   SPU_DTOR    (SPU_struct* spu);
 
-SPU_error_t SPU_verify (SPU_struct* spu);
+SPU_error_t SPU_verify  (SPU_struct* spu);
 
-void SPU_dump        (SPU_struct* spu, SPU_DUMP_RECIEVE_INFO);
+void        SPU_dump    (SPU_struct* spu, SPU_DUMP_RECIEVE_INFO);
 
-void SPU_process (const char* const spu_file_name);
+void        SPU_process (const char* const spu_file_name);
 
-SPU_error Processor (const char        spu_code[],
-                     const size_t      code_length,
-                     SPU_struct* const spu);
+SPU_error   Processor (const unsigned char spu_code[],
+                       const size_t        code_length,
+                       SPU_struct* const   spu);
 
 #endif

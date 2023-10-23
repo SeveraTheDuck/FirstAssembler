@@ -1,11 +1,26 @@
 #include "headers/translator.h"
 
+/// @brief Max length of a command word while reading from asm file.
 static const size_t CMD_MAX_LENGTH    = 0x100;
-static const size_t LABELS_MAX_NUMBER = 0x400;
-static const size_t FILE_MAX_SIZE     = 0x1000;
 
-static char   translated_string[FILE_MAX_SIZE] = {};
+/// @brief Max number of labels in asm file.
+static const size_t LABELS_MAX_NUMBER = 0x400;
+
+/// @brief Max size of the asm file.
+static const size_t FILE_MAX_SIZE     = 0x1000; // FIXME: make dynamic?
+
+/// @brief Array of translated commands and numbers.
+/// Will be pushed in translated file via fwrite().
+static char translated_string[FILE_MAX_SIZE] = {};
+
+/// @brief Index of translated_string[] array.
 static size_t translated_string_index = 0;
+
+/// @brief Array of labels fixups. Includes address to rewrite and number of label.
+static Fixup label_fixups_array[LABELS_MAX_NUMBER] = {};
+
+/// @brief Number of fixups.
+static size_t n_label_fixups = 0;
 
 void TranslateFile (const char* const original_file_name,
                     const char* const translated_file_name)
@@ -24,18 +39,24 @@ void TranslateFile (const char* const original_file_name,
     fclose (translated_file);
 }
 
+/// @brief Code generator for Translator().
 #define DEF_CMD(function_name, function_number, n_args, ...)                \
-    if (strcasecmp (operation, #function_name) == 0)                        \
+    if (strcasecmp (command_name, #function_name) == 0)                     \
     {                                                                       \
-        *(int*)(void*) (translated_string +                                 \
-                        translated_string_index) = ASM_##function_name;     \
-        operation_addresses[translated_operations_number++] =               \
-                            translated_string_index;                        \
-        translated_string_index += sizeof (int);                            \
+        if (n_args)                                                         \
+        {                                                                   \
+            ReadArguments (original_file->lines_array[n_line].line +        \
+                           command_len + 1,                                 \
+                           (function_number),                               \
+                           labels_array, &n_labels);                        \
+        }                                                                   \
                                                                             \
-        if (n_args) ReadArgument (original_file, operation_addresses,       \
-                                  n_line, operation, (function_number),     \
-                                  labels_array, &n_labels);                 \
+        else                                                                \
+        {                                                                   \
+            *(translated_string +                                           \
+              translated_string_index) = ASM_##function_name;               \
+            translated_string_index += sizeof (char);                       \
+        }                                                                   \
     }                                                                       \
     else
 
@@ -45,13 +66,11 @@ FILE* Translator (file_input* const original_file,
     assert (original_file);
     assert (translated_file);
 
-    char operation[CMD_MAX_LENGTH] = {};
+    /// Array where the scaned command word is located.
+    char command_name[CMD_MAX_LENGTH] = {};
 
-    Label labels_array[LABELS_MAX_NUMBER] = {};
+    Label  labels_array[LABELS_MAX_NUMBER] = {};
     size_t n_labels = 0;
-
-    size_t operation_addresses[FILE_MAX_SIZE] = {};
-    size_t translated_operations_number = 0;
 
     for (size_t n_line = 0; n_line < original_file->number_of_lines; ++n_line)
     {
@@ -62,13 +81,36 @@ FILE* Translator (file_input* const original_file,
 
         if (original_file->lines_array[n_line].line[0] == ':')
         {
-            SetLabel (original_file, n_line, labels_array, &n_labels);
+            SetLabel (original_file->lines_array[n_line].line,
+                      labels_array, &n_labels);
             continue;
         }
 
-        sscanf (original_file->lines_array[n_line].line, "%255s", operation);
+        int command_len = 0;
+        sscanf (original_file->lines_array[n_line].line,
+                "%255s%n", command_name, &command_len);
+
+        size_t whitespaces = 0;
+        for (whitespaces = 0; whitespaces < original_file->lines_array[n_line].
+                                            number_of_elements; ++whitespaces)
+        {
+            if (original_file->lines_array[n_line].line[whitespaces] != ' ')
+            break;
+        }
+
         #include "headers/commands.h"
-        ;
+        /* else */
+        {
+            fprintf (stderr, "UNKNOWN COMMAND %s\n", command_name);
+            return nullptr;
+        }
+    }
+
+    for (size_t i = 0; i < n_label_fixups; ++i)
+    {
+        memcpy (translated_string + label_fixups_array[i].label_address,
+              &(labels_array[label_fixups_array[i].label_id].
+                label_address), sizeof (int));
     }
 
     fwrite (translated_string, translated_string_index, sizeof (char),
@@ -78,124 +120,118 @@ FILE* Translator (file_input* const original_file,
 
 #undef DEF_CMD
 
-void ReadArgument (const file_input* const original_file,
-                   const size_t* operation_addresses,
-                   const size_t  n_line,
-                   char* const   operation,
-                   const int     function_number,
-                         Label * const labels_array,
-                         size_t* n_labels)
+void ReadArguments (const char  *       original_line,
+                          int           function_number,
+                          Label * const labels_array,
+                          size_t*       n_labels)
 {
-    assert (original_file);
-    assert (operation_addresses);
-    assert (operation);
+    assert (original_line);
     assert (labels_array);
     assert (n_labels);
 
-    int  n_read_args = 0;
-    int  d_arg       = 0;
-    char c_arg[2]    = {};
+    int  n_read_args    = 0;
+    int  d_arg          = 0;
+    char r_arg[2]       = {};
+    char label_name[LABEL_MAX_LENGTH] = {};
 
-    if (sscanf (original_file->lines_array[n_line].line,
-        "%s %d", operation, &d_arg) == 2)
+    size_t original_line_length = strlen (original_line);
+
+    if (original_line[0] == '[' &&
+        original_line[original_line_length - 1] == ']')
     {
-        TranslateArgument (STANDART_REGIME, operation_addresses,
-                           d_arg, function_number);
+        function_number |= RAM_REGIME;
+        original_line += 1;
     }
 
-    else if (sscanf (original_file->lines_array[n_line].line,
-             "%s r%[abcd]x%n", operation, c_arg, &n_read_args) == 2)
+    if (sscanf (original_line, ":%s", label_name) == 1)
     {
-        TranslateArgument (REGISTER_REGIME, operation_addresses,
-                           c_arg[0] - 'a', function_number);
+        GetLabel (function_number, label_name, labels_array,  n_labels);
+        return;
     }
 
-    else if (sscanf (original_file->lines_array[n_line].line,
-             "%s :", operation) == 1)
+    if (sscanf (original_line,
+                "r%[abcd]x %n", r_arg, &n_read_args) == 1)
     {
-        GetLabel (original_file, n_line, operation,
-                  labels_array,  n_labels);
+        function_number |= REGISTER_REGIME;
     }
+
+    if (sscanf (original_line + n_read_args, // potential error?
+                "%d", &d_arg) == 1)
+    {
+        function_number |= STANDART_REGIME;
+    }
+
+    TranslateArguments (function_number, d_arg, r_arg[0] - 'a');
 }
 
-#define DEF_CMD(function_name, function_number, n_args, ...)            \
-    case ASM_##function_name:                                           \
-    {                                                                   \
-        TranslateJmpOperation (translated_value, operation_addresses);  \
-        break;                                                          \
-    }
-
-void TranslateArgument (const PushRegime push_regime,
-                        const size_t* operation_addresses,
-                        const int     translated_value,
-                        const int     function_number)
+void TranslateArguments (const int  function_number,
+                         const int  decimal_argument,
+                         const char register_argument)
 {
-    assert (operation_addresses);
+    *(translated_string + translated_string_index) = (char) function_number;
+    translated_string_index += sizeof (char);
 
-    switch (function_number)
+    if (function_number & REGISTER_REGIME)
     {
-        case ASM_PUSH:
-        {
-            TranslatePushOperation (push_regime);
-            break;
-        }
-
-        #include "headers/jumps.h"
-        ;
+        memcpy (translated_string + translated_string_index,
+               &register_argument, sizeof (char));
+        translated_string_index += sizeof (char);
     }
 
-    *(int*)(void*) (translated_string +
-                    translated_string_index) = translated_value;
-    translated_string_index += sizeof (int);
+    if (function_number & STANDART_REGIME)
+    {
+        memcpy (translated_string + translated_string_index,
+               &decimal_argument, sizeof (int));
+        translated_string_index += sizeof (int);
+    }
 }
 
 #undef DEF_CMD
 
-void TranslatePushOperation (const PushRegime push_regime)
+void SetLabel (const char  * const original_line,
+                     Label * const labels_array,
+                     size_t*       n_labels)
 {
-    int translated_push = ASM_PUSH | push_regime;
-
-    translated_string_index -= sizeof (int);
-    *(int*)(void*) (translated_string +
-                    translated_string_index) = translated_push;
-    translated_string_index += sizeof (int);
-}
-
-void SetLabel (const file_input* const original_file,
-               const size_t            n_line,
-                     Label *     const labels_array,
-                     size_t*           n_labels)
-{
-    assert (original_file);
+    assert (original_line);
     assert (labels_array);
     assert (n_labels);
 
-    sscanf (original_file->lines_array[n_line].line,
-            ":%s", labels_array[*n_labels].label_name);
+    char new_label_name[LABEL_MAX_LENGTH] = {};
+
+    sscanf (original_line,
+            ":%s", new_label_name);
+
+    for (size_t i = 0; i < *n_labels; ++i)
+    {
+        if (strcmp (new_label_name, labels_array[i].label_name) == 0)
+        {
+            labels_array[i].label_address = translated_string_index;
+            return;
+        }
+    }
+
+    strcpy (labels_array[*n_labels].label_name, new_label_name);
     labels_array[(*n_labels)++].label_address = translated_string_index;
 }
 
-void GetLabel (const file_input* const original_file,
-               const size_t            n_line,
-                     char*       const operation,
-                     Label *     const labels_array,
-                     size_t*           n_labels)
+void GetLabel (const int           function_number,
+               const char  * const need_label_name,
+                     Label * const labels_array,
+                     size_t*       n_labels)
 {
-    assert (original_file);
-    assert (operation);
+    assert (need_label_name);
     assert (labels_array);
     assert (n_labels);
 
-    char need_label_name[LABEL_MAX_LENGTH] = {};
-    sscanf (original_file->lines_array[n_line].line,
-            "%s :%s", operation, need_label_name);
+    *(translated_string + translated_string_index) = (char) function_number;
+    translated_string_index += sizeof (char);
 
     for (size_t cur_label = 0; cur_label < *n_labels; ++cur_label)
     {
         if (strcmp (labels_array[cur_label].label_name, need_label_name) == 0)
         {
-            *(int*)(void*) (translated_string + translated_string_index) =
-                      (int) labels_array[cur_label].label_address;
+            memcpy (translated_string + translated_string_index,
+                   &labels_array[cur_label].label_address, sizeof (int));
             translated_string_index += sizeof (int);
 
             return;
@@ -203,15 +239,12 @@ void GetLabel (const file_input* const original_file,
     }
 
     strcpy (labels_array[*n_labels].label_name, need_label_name);
-    labels_array[(*n_labels)++].label_address = FILE_MAX_SIZE;
-}
+    labels_array[*n_labels].label_address = FILE_MAX_SIZE;
 
-void TranslateJmpOperation (const int     translated_value,
-                            const size_t* operation_addresses)
-{
-    assert (operation_addresses);
+    label_fixups_array[n_label_fixups].label_address = translated_string_index;
+    label_fixups_array[n_label_fixups++].label_id    = (*n_labels)++;
 
-    *(int*)(void*) (translated_string + translated_string_index) =
-              (int) operation_addresses[translated_value];
+    memcpy (translated_string + translated_string_index,
+           &FILE_MAX_SIZE, sizeof (int));
     translated_string_index += sizeof (int);
 }

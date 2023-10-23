@@ -1,19 +1,2 @@
         push 1
-:gohere
-        pop rax
-        push rax
-        push rax
-        mul
-        out
-
-        push rax
-        push 1
-        add
-
-        push rax
-        push 1
-        add
-        push 10
-        jae :gohere
-
-        hlt
+        pop [10]

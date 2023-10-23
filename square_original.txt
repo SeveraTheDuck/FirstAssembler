@@ -1,0 +1,141 @@
+        jmp :main
+
+:InputCoeffs
+        in
+        pop rax
+        in
+        pop rbx
+        in
+        pop rcx
+
+        ret
+
+:LinearEquationCheck
+        push rax
+        push 0
+        je :LinearEquation
+
+        ret
+
+:LinearEquation
+        push rbx
+        push 0
+        je :BIsZero
+
+        push -1
+        push rcx
+        mul
+        push rbx
+        div
+
+        push 1
+        out
+        out
+
+        hlt
+
+:BIsZero
+        push rcx
+        push 0
+        je :SS_INFINITE_ROOTS
+
+        push 0
+        out
+
+        hlt
+
+:SS_INFINITE_ROOTS
+        push 8
+        out
+
+        hlt
+
+:FindDiscriminant
+        push rbx
+        push rbx
+        mul
+        push 4
+        push rax
+        push rcx
+        mul
+        mul
+        sub
+
+        pop rdx
+
+        ret
+
+:DiscriminantCheck
+        push rdx
+        push 0
+        ja :SS_NO_ROOTS
+
+        push rdx
+        push 0
+        je :SS_ONE_ROOT
+
+        jmp :SS_TWO_ROOTS
+
+        ret
+
+:SS_NO_ROOTS
+        push 0
+        out
+
+        hlt
+
+:SS_ONE_ROOT
+        push -1
+        push rbx
+        mul
+        push 2
+        push rax
+        mul
+        div
+        out
+
+        hlt
+
+:SS_TWO_ROOTS
+        push rdx
+        sqrt
+        pop rdx
+
+        push -1
+        push rbx
+        mul
+        pop [0]
+
+        push [0]
+        push rdx
+        add
+        push 2
+        push rax
+        mul
+        div
+
+        push [0]
+        push rdx
+        sub
+        push 2
+        push rax
+        mul
+        div
+
+        push 2
+        out
+        out
+        out
+
+        hlt
+
+
+:main
+        call :InputCoeffs
+
+        call :LinearEquationCheck
+
+        call :FindDiscriminant
+
+        call :DiscriminantCheck
+        hlt

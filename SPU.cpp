@@ -1,24 +1,31 @@
 #include "headers/SPU.h"
 
-static const size_t MAX_FILE_SIZE = 0x1000;
-static const int    OPERATION_NUMBER_MASK = 0x3F;
+static const size_t MAX_FILE_SIZE         = 0x1000;
+static const int    OPERATION_NUMBER_MASK = 0x1F;
 
 SPU_error SPU_CTOR (SPU_struct* const spu,
                     SPU_CTOR_RECIVE_INFO)
 {
     assert (spu);
     assert (spu->register_vars);
+    assert (spu->ram_array);
 
     STACK_CTOR (&spu->stk);
+    STACK_CTOR (&spu->call_stk);
 
-    spu->init_line = init_line;
-    spu->init_file = init_file;
-    spu->init_func = init_func;
+    for (size_t i = 0; i < RAM_AMOUNT; ++i)
+    {
+        spu->ram_array[i] = 0;
+    }
 
     for (size_t i = 0; i < REG_NUMBER; ++i)
     {
         spu->register_vars[i] = 0;
     }
+
+    spu->init_line = init_line;
+    spu->init_file = init_file;
+    spu->init_func = init_func;
 
     memset (&spu->spu_errors_list, 0, sizeof (SPU_error));
 
@@ -32,6 +39,7 @@ SPU_error SPU_DTOR (SPU_struct* spu)
     SPU_VERIFY (spu);
 
     STACK_DTOR (&spu->stk);
+    STACK_DTOR (&spu->call_stk);
 
     for (size_t i = 0; i < REG_NUMBER; ++i)
     {
@@ -76,10 +84,10 @@ void SPU_process (const char* const spu_file_name)
 {
     assert (spu_file_name);
 
-    FILE* spu_file = fopen (spu_file_name, "rb");
+    FILE*   spu_file = fopen (spu_file_name, "rb");
     assert (spu_file);
 
-    char spu_code[MAX_FILE_SIZE] = {};
+    unsigned char spu_code[MAX_FILE_SIZE] = {};
     size_t code_length = 0;
     code_length = fread (spu_code, sizeof (char), MAX_FILE_SIZE,
                          spu_file);
@@ -101,20 +109,42 @@ void SPU_process (const char* const spu_file_name)
         SPU_VERIFY (spu);                                       \
         break;
 
-SPU_error Processor (const char spu_code[MAX_FILE_SIZE],
-                     const size_t code_length,
-                     SPU_struct* const spu)
+SPU_error Processor (const unsigned char spu_code[MAX_FILE_SIZE],
+                     const size_t        code_length,
+                     SPU_struct* const   spu)
 {
     assert (spu_code);
     SPU_VERIFY (spu);
 
-    int n_operation = 0;
-    size_t code_index = 0;
+    unsigned char n_operation  = 0;
+    unsigned char reg_arg      = 0;
+    int  dec_arg               = 0;
+    size_t code_index          = 0;
+    Processor_t reg_arg_value  = 0;
 
     while (code_index < code_length)
     {
-        n_operation = *(int*)(void*) (spu_code + code_index);
-        code_index += sizeof (int);
+        n_operation = *(spu_code + code_index);
+        code_index += sizeof (char);
+        reg_arg = 0;
+        dec_arg = 0;
+        reg_arg_value = 0;
+
+        if (n_operation & REGISTER_REGIME)
+        {
+            memcpy (&reg_arg, spu_code + code_index, sizeof (char));
+            code_index += sizeof (char);
+
+            reg_arg_value = spu->register_vars[reg_arg];
+        }
+
+        if (n_operation & STANDART_REGIME)
+        {
+            memcpy (&dec_arg, spu_code + code_index, sizeof (int));
+            code_index += sizeof (int);
+
+            dec_arg *= DOUBLE_PRECISION;
+        }
 
         switch (n_operation & OPERATION_NUMBER_MASK)
         {

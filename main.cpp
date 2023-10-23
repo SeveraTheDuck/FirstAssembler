@@ -4,14 +4,19 @@
 
 int main (int /*argc*/, char** /*argv*/)
 {
-    // Translating from English to asm.
-    TranslateFile ("original.txt", "translated.txt");
-//
-//     // Translating from asm to English.
-//     DecodeFile ("translated.txt", "decoded.txt");
+// QUADRATIC EQUATION
+    TranslateFile ("square_original.txt", "square_translated.txt");
+    SPU_process   ("square_translated.txt");
+// QUADRATIC EQUATION
 
-    // SPU
-    SPU_process ("translated.txt");
+// FIBONACCI
+    // TranslateFile ("fibonacci_original.txt", "fibonacci_translated.txt");
+    // SPU_process   ("fibonacci_translated.txt");
+// FIBONACCI END
 
+// TEST
+    // TranslateFile ("original.txt", "translated.txt");
+    // SPU_process   ("translated.txt");
+// TEST END
     return 0;
 }
