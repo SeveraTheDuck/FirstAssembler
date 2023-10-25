@@ -125,9 +125,10 @@ SPU_error Processor (const unsigned char spu_code[MAX_FILE_SIZE],
     while (code_index < code_length)
     {
         n_operation = *(spu_code + code_index);
-        code_index += sizeof (char);
-        reg_arg = 0;
-        dec_arg = 0;
+        code_index += sizeof (unsigned char);
+
+        reg_arg       = 0;
+        dec_arg       = 0;
         reg_arg_value = 0;
 
         if (n_operation & REGISTER_REGIME)

@@ -117,9 +117,11 @@ DEF_CMD (DIV, 0x08, 0,
 
 DEF_CMD (CALL, 0x10, 1,
 {
+    code_index -= sizeof (int);
     StackPush (&spu->call_stk, (Elem_t) (code_index + sizeof (int)));
 
     int dest_operation = 0;
+
     memcpy (&dest_operation, spu_code + code_index, sizeof (int));
     code_index = (size_t) dest_operation;
 })
@@ -141,4 +143,28 @@ DEF_CMD (SQRT, 0x12, 0,
     sqrt_value = (Processor_t) (sqrt (float_value) * DOUBLE_PRECISION);
 
     StackPush (&spu->stk, sqrt_value);
+})
+
+DEF_CMD (SIN, 0x13, 0,
+{
+    Processor_t sin_value   = 0;
+    double      float_value = 0;
+
+    StackPop (&spu->stk, &sin_value);
+    float_value = (double) sin_value / DOUBLE_PRECISION;
+    sin_value = (Processor_t) (sin (float_value) * DOUBLE_PRECISION);
+
+    StackPush (&spu->stk, sin_value);
+})
+
+DEF_CMD (COS, 0x14, 0,
+{
+    Processor_t cos_value   = 0;
+    double      float_value = 0;
+
+    StackPop (&spu->stk, &cos_value);
+    float_value = (double) cos_value / DOUBLE_PRECISION;
+    cos_value = (Processor_t) (cos (float_value) * DOUBLE_PRECISION);
+
+    StackPush (&spu->stk, cos_value);
 })

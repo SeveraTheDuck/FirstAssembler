@@ -1,0 +1,95 @@
+0	JMP label_0 DE
+5	IN 
+6	POP rax 
+8	IN 
+9	POP rbx 
+B	IN 
+C	POP rcx 
+E	RET 
+F	PUSH rax 
+11	PUSH 0
+16	JE label_1 1C
+1B	RET 
+1C	PUSH rbx 
+1E	PUSH 0
+23	JE label_2 3B
+28	PUSH -1
+2D	PUSH rcx 
+2F	MUL 
+30	PUSH rbx 
+32	DIV 
+33	PUSH 1
+38	OUT 
+39	OUT 
+3A	HLT 
+3B	PUSH rcx 
+3D	PUSH 0
+42	JE label_3 4E
+47	PUSH 0
+4C	OUT 
+4D	HLT 
+4E	PUSH 8
+53	OUT 
+54	HLT 
+55	PUSH rbx 
+57	PUSH rbx 
+59	MUL 
+5A	PUSH 4
+5F	PUSH rax 
+61	PUSH rcx 
+63	MUL 
+64	MUL 
+65	SUB 
+66	POP rdx 
+68	RET 
+69	PUSH rdx 
+6B	PUSH 0
+70	JA label_4 87
+75	PUSH rdx 
+77	PUSH 0
+7C	JE label_5 8E
+81	JMP label_6 A1
+86	RET 
+87	PUSH 0
+8C	OUT 
+8D	HLT 
+8E	PUSH -1
+93	PUSH rbx 
+95	MUL 
+96	PUSH 2
+9B	PUSH rax 
+9D	MUL 
+9E	DIV 
+9F	OUT 
+A0	HLT 
+A1	PUSH rdx 
+A3	SQRT 
+A4	POP rdx 
+A6	PUSH -1
+AB	PUSH rbx 
+AD	MUL 
+AE	POP [0]
+B3	PUSH [0]
+B8	PUSH rdx 
+BA	ADD 
+BB	PUSH 2
+C0	PUSH rax 
+C2	MUL 
+C3	DIV 
+C4	PUSH [0]
+C9	PUSH rdx 
+CB	SUB 
+CC	PUSH 2
+D1	PUSH rax 
+D3	MUL 
+D4	DIV 
+D5	PUSH 2
+DA	OUT 
+DB	OUT 
+DC	OUT 
+DD	HLT 
+DE	CALL label_7 5
+E3	CALL label_8 F
+E8	CALL label_9 55
+ED	CALL label_10 69
+F2	HLT 

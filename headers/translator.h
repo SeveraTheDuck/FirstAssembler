@@ -1,28 +1,8 @@
 #ifndef TRANSLATOR_H
 #define TRANSLATOR_H
 
-#include <stdlib.h>
 #include "../FileOpenLib/filestruct.h"
-
-const size_t LABEL_MAX_LENGTH  = 0x100;
-
-#define DEF_CMD(function_name, function_number, ...)  \
-    ASM_##function_name = function_number,
-
-enum OperationsDecode
-{
-    #include "commands.h"
-    ASM_VERSION = 2
-};
-
-#undef DEF_CMD
-
-enum PushRegime
-{
-    STANDART_REGIME = 0x20,
-    REGISTER_REGIME = 0x40,
-    RAM_REGIME      = 0x80
-};
+#include "constants.h"
 
 struct Label
 {
@@ -44,6 +24,8 @@ void TranslateFile (const char* const original_file_name,
 /// @return Pointer to opened translated file on asm language.
 FILE* Translator (file_input* const original_file,
                   FILE*       const translated_file);
+
+void DoFixups (const Label* const labels_array);
 
 void ReadArguments (const char  *       original_line,
                     const int           function_number,

@@ -31,8 +31,8 @@ void TranslateFile (const char* const original_file_name,
     file_input original_file = {};
     GetFileInput (original_file_name, &original_file, PARTED);
 
-    FILE* translated_file = fopen (translated_file_name, "wb");
-    assert     (translated_file);
+    FILE*   translated_file = fopen (translated_file_name, "wb");
+    assert (translated_file);
     Translator (&original_file, translated_file);
 
     FreeFileInput (&original_file);
@@ -90,14 +90,6 @@ FILE* Translator (file_input* const original_file,
         sscanf (original_file->lines_array[n_line].line,
                 "%255s%n", command_name, &command_len);
 
-        size_t whitespaces = 0;
-        for (whitespaces = 0; whitespaces < original_file->lines_array[n_line].
-                                            number_of_elements; ++whitespaces)
-        {
-            if (original_file->lines_array[n_line].line[whitespaces] != ' ')
-            break;
-        }
-
         #include "headers/commands.h"
         /* else */
         {
@@ -106,12 +98,7 @@ FILE* Translator (file_input* const original_file,
         }
     }
 
-    for (size_t i = 0; i < n_label_fixups; ++i)
-    {
-        memcpy (translated_string + label_fixups_array[i].label_address,
-              &(labels_array[label_fixups_array[i].label_id].
-                label_address), sizeof (int));
-    }
+    DoFixups (labels_array);
 
     fwrite (translated_string, translated_string_index, sizeof (char),
             translated_file);
@@ -119,6 +106,18 @@ FILE* Translator (file_input* const original_file,
 }
 
 #undef DEF_CMD
+
+void DoFixups (const Label* const labels_array)
+{
+    assert (labels_array);
+
+    for (size_t i = 0; i < n_label_fixups; ++i)
+    {
+        memcpy (translated_string + label_fixups_array[i].label_address,
+              &(labels_array[label_fixups_array[i].label_id].
+                label_address), sizeof (int));
+    }
+}
 
 void ReadArguments (const char  *       original_line,
                           int           function_number,
@@ -140,11 +139,12 @@ void ReadArguments (const char  *       original_line,
         original_line[original_line_length - 1] == ']')
     {
         function_number |= RAM_REGIME;
-        original_line += 1;
+        original_line += sizeof (char);
     }
 
     if (sscanf (original_line, ":%s", label_name) == 1)
     {
+        function_number |= STANDART_REGIME;
         GetLabel (function_number, label_name, labels_array,  n_labels);
         return;
     }
@@ -155,7 +155,7 @@ void ReadArguments (const char  *       original_line,
         function_number |= REGISTER_REGIME;
     }
 
-    if (sscanf (original_line + n_read_args, // potential error?
+    if (sscanf (original_line + n_read_args,
                 "%d", &d_arg) == 1)
     {
         function_number |= STANDART_REGIME;

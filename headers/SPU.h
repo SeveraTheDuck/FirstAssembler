@@ -1,10 +1,12 @@
 #ifndef SPU_H
 #define SPU_H
 
-#include "../FileOpenLib/filestruct.h"
-#include "../stack/headers/stack.h"
-#include "translator.h"
 #include <math.h>
+#include "../stack/headers/stack.h"
+#include "constants.h"
+
+const size_t RAM_AMOUNT = 100;
+const int    DOUBLE_PRECISION = 10000; ///< Four digits after the point.
 
 #define SPU_GET_ELEM_INFO __LINE__, __FILE__, __func__
 
@@ -31,10 +33,6 @@
         SPU_error spu_nullptr = { 1 };                          \
         return spu_nullptr;                                     \
     }
-
-const size_t REG_NUMBER = 4;
-const size_t RAM_AMOUNT = 100;
-const int    DOUBLE_PRECISION = 10000; ///< Four digits after the point.
 
 typedef unsigned int SPU_error_t;
 struct SPU_error

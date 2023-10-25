@@ -1,7 +1,10 @@
 #ifndef DISASSEMBLER_H
 #define DISASSEMBLER_H
 
-#include "translator.h"
+#include "constants.h"
+
+const size_t MAX_TRANSLATED_FILE_SIZE = 0x1000;
+const size_t MAX_WORD_LENGTH = 0x100;
 
 void DecodeFile (const char* const translated_file_name,
                  const char* const decoded_file_name);
@@ -9,17 +12,22 @@ void DecodeFile (const char* const translated_file_name,
 /// @brief This function decodes file (translates from assembler language to human).
 /// @param translated_file Pointer to struct with info about file on asm language.
 /// @return Pointer to decoded file.
-FILE* Decoder (file_input* const translated_file,
-               FILE*       const decoded_file);
+void Decoder (const unsigned char* const spu_code,
+              const size_t spu_code_length,
+              const char* const decoded_file_name);
 
-void DecodePush (file_input* const translated_file,
-                 FILE* const decoded_file,
-                 const size_t n_line,
-                 const int n_operation);
+void WriteToFile (const char* const decoded_file_name,
+                  const char* const decoded_file_array,
+                  const int         decoded_file_index);
 
-void DecodePop (file_input* const translated_file,
-                FILE* const decoded_file,
-                const size_t n_line,
-                int n_operation);
+void PrintArgs (const unsigned char command,
+                const unsigned char* const spu_code,
+                size_t* const spu_code_index,
+                char* const decoded_file_array,
+                int* const decoded_file_index);
+
+void SetDisasmLabel (const int   dec_argument,
+                     char* const decoded_file_array,
+                     int * const decoded_file_index);
 
 #endif
