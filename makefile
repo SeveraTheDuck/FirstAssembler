@@ -41,6 +41,18 @@ $(BIN_DIR)SPU.o: $(SOURCE_DIR)SPU.cpp $(HEADERS)SPU.h $(HEADERS)constants.h $(HE
 $(BIN_DIR)videomemory.o: $(SOURCE_DIR)videomemory.cpp
 	@$(CC) $(FLAGS) $(SOURCE_DIR)videomemory.cpp -c -o $(BIN_DIR)videomemory.o
 
+$(BIN_DIR)filestruct.o: FileOpenLib/filestruct.cpp
+	@$(CC) $(FLAGS) FileOpenLib/filestruct.cpp -c -o $(BIN_DIR)filestruct.o
+
+$(BIN_DIR)stack.o: stack/stack.cpp
+	@$(CC) $(FLAGS) stack/stack.cpp -c -o $(BIN_DIR)stack.o
+
+$(BIN_DIR)hash.o: stack/hash.cpp
+	@$(CC) $(FLAGS) stack/hash.cpp -c -o $(BIN_DIR)hash.o
+
+$(BIN_DIR)errors.o: stack/errors.cpp
+	@$(CC) $(FLAGS) stack/errors.cpp -c -o $(BIN_DIR)errors.o
+
 .PHONY: makedirs clean doxygen
 
 makedirs:
