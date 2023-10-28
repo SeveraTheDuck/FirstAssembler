@@ -1,4 +1,4 @@
-#include "headers/translator.h"
+#include "../headers/translator.h"
 
 /// @brief Max length of a command word while reading from asm file.
 static const size_t CMD_MAX_LENGTH    = 0x100;
@@ -90,7 +90,7 @@ FILE* Translator (file_input* const original_file,
         sscanf (original_file->lines_array[n_line].line,
                 "%255s%n", command_name, &command_len);
 
-        #include "headers/commands.h"
+        #include "../headers/commands.h"
         /* else */
         {
             fprintf (stderr, "UNKNOWN COMMAND %s\n", command_name);
@@ -138,13 +138,13 @@ void ReadArguments (const char  *       original_line,
     if (original_line[0] == '[' &&
         original_line[original_line_length - 1] == ']')
     {
-        function_number |= RAM_REGIME;
+        function_number |= RAM_MODE;
         original_line += sizeof (char);
     }
 
     if (sscanf (original_line, ":%s", label_name) == 1)
     {
-        function_number |= STANDART_REGIME;
+        function_number |= STANDART_MODE;
         GetLabel (function_number, label_name, labels_array,  n_labels);
         return;
     }
@@ -152,13 +152,13 @@ void ReadArguments (const char  *       original_line,
     if (sscanf (original_line,
                 "r%[abcd]x %n", r_arg, &n_read_args) == 1)
     {
-        function_number |= REGISTER_REGIME;
+        function_number |= REGISTER_MODE;
     }
 
     if (sscanf (original_line + n_read_args,
                 "%d", &d_arg) == 1)
     {
-        function_number |= STANDART_REGIME;
+        function_number |= STANDART_MODE;
     }
 
     TranslateArguments (function_number, d_arg, r_arg[0] - 'a');
@@ -171,14 +171,14 @@ void TranslateArguments (const int  function_number,
     *(translated_string + translated_string_index) = (char) function_number;
     translated_string_index += sizeof (char);
 
-    if (function_number & REGISTER_REGIME)
+    if (function_number & REGISTER_MODE)
     {
         memcpy (translated_string + translated_string_index,
                &register_argument, sizeof (char));
         translated_string_index += sizeof (char);
     }
 
-    if (function_number & STANDART_REGIME)
+    if (function_number & STANDART_MODE)
     {
         memcpy (translated_string + translated_string_index,
                &decimal_argument, sizeof (int));
@@ -198,8 +198,7 @@ void SetLabel (const char  * const original_line,
 
     char new_label_name[LABEL_MAX_LENGTH] = {};
 
-    sscanf (original_line,
-            ":%s", new_label_name);
+    sscanf (original_line, ":%s", new_label_name);
 
     for (size_t i = 0; i < *n_labels; ++i)
     {
@@ -238,6 +237,13 @@ void GetLabel (const int           function_number,
         }
     }
 
+    SetUnknownLabel (need_label_name, labels_array, n_labels);
+}
+
+void SetUnknownLabel (const char  * const need_label_name,
+                            Label * const labels_array,
+                            size_t*       n_labels)
+{
     strcpy (labels_array[*n_labels].label_name, need_label_name);
     labels_array[*n_labels].label_address = FILE_MAX_SIZE;
 

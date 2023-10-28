@@ -1,0 +1,18 @@
+0	JMP label_0 24
+5	PUSH rax 
+7	PUSH 1
+C	JE label_1 23
+11	PUSH rax 
+13	PUSH 1
+18	SUB 
+19	POP rax 
+1B	PUSH rax 
+1D	CALL label_2 5
+22	MUL 
+23	RET 
+24	PUSH 6
+29	POP rax 
+2B	PUSH rax 
+2D	CALL label_3 5
+32	OUT 
+33	HLT 

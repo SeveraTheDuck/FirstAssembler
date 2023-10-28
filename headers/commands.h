@@ -7,8 +7,10 @@ DEF_CMD (PUSH, 0x01, 2,
 {
     int push_value = 0;
 
-    if (n_operation & RAM_REGIME)
+    if (n_operation & RAM_MODE)
     {
+        dec_arg /= DOUBLE_PRECISION;
+        reg_arg_value /= DOUBLE_PRECISION;
         push_value = spu->ram_array[dec_arg + reg_arg_value];
     }
     else
@@ -21,8 +23,10 @@ DEF_CMD (PUSH, 0x01, 2,
 
 DEF_CMD (POP, 0x02, 2,
 {
-    if (n_operation & RAM_REGIME)
+    if (n_operation & RAM_MODE)
     {
+        dec_arg /= DOUBLE_PRECISION;
+        reg_arg_value /= DOUBLE_PRECISION;
         StackPop (&spu->stk, &spu->ram_array[dec_arg + reg_arg_value]);
     }
     else
@@ -52,7 +56,7 @@ DEF_CMD (OUT, 0x04, 0,
     StackPop (&spu->stk, &decimal_output_value);
     float_output_value = (double) decimal_output_value / DOUBLE_PRECISION;
 
-    printf ("%lg\n", float_output_value);
+    fprintf (stderr, "%lg\n", float_output_value);
 })
 
 DEF_CMD (ADD, 0x05, 0,
@@ -85,10 +89,11 @@ DEF_CMD (MUL, 0x07, 0,
     StackPop  (&spu->stk, &r_operator);
     StackPop  (&spu->stk, &l_operator);
 
-    Processor_t output_value = l_operator * r_operator;
-    output_value /= DOUBLE_PRECISION;
+    l_operator /= DOUBLE_PRECISION; // overflow expected if not divide
+    r_operator /= DOUBLE_PRECISION;
+    Processor_t output_value = l_operator * r_operator * DOUBLE_PRECISION;
 
-    StackPush (&spu->stk, output_value); //FIXME UB (weak)
+    StackPush (&spu->stk, output_value);
 })
 
 DEF_CMD (DIV, 0x08, 0,
@@ -103,7 +108,6 @@ DEF_CMD (DIV, 0x08, 0,
     if (r_operator == 0)
     {
         fprintf (stderr, "DIVIDING BY ZERO IS FORBIDDEN IN MATH");
-                                                                    // ADD DIVIDING BY ZERO ERROR
         return spu->spu_errors_list;
     }
 
@@ -129,7 +133,14 @@ DEF_CMD (CALL, 0x10, 1,
 DEF_CMD (RET, 0x11, 0,
 {
     int dest_operation = 0;
+
     StackPop (&spu->call_stk, &dest_operation);
+
+    if (dest_operation < 0)
+    {
+        fprintf (stderr, "Wrong return address: %d", dest_operation);
+        abort (); // do not abort?
+    }
     code_index = (size_t) dest_operation;
 })
 
@@ -167,4 +178,25 @@ DEF_CMD (COS, 0x14, 0,
     cos_value = (Processor_t) (cos (float_value) * DOUBLE_PRECISION);
 
     StackPush (&spu->stk, cos_value);
+})
+
+DEF_CMD (DIV_MODULE, 0x15, 0,
+{
+    Processor_t l_operator  = 0;
+    Processor_t r_operator  = 0;
+    Processor_t result      = 0;
+
+    StackPop  (&spu->stk, &r_operator);
+    StackPop  (&spu->stk, &l_operator);
+
+    if (r_operator == 0)
+    {
+        fprintf (stderr, "DIVIDING BY ZERO IS FORBIDDEN IN MATH");
+                                                                    // ADD DIVIDING BY ZERO ERROR
+        return spu->spu_errors_list;
+    }
+
+    result = l_operator % r_operator;
+
+    StackPush (&spu->stk, result);
 })

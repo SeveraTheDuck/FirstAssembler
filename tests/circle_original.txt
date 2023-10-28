@@ -1,0 +1,20 @@
+        jmp :main
+
+:WriteCircle
+        push 0
+        pop rcx
+
+:MakePoint
+
+
+        push 256
+        push rcx
+        jb :MakePoint
+
+:main
+        push 8
+        pop rax
+        push 8
+        pop rbx
+        call :WriteCircle
+        hlt

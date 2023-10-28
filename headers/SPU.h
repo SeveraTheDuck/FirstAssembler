@@ -4,9 +4,7 @@
 #include <math.h>
 #include "../stack/headers/stack.h"
 #include "constants.h"
-
-const size_t RAM_AMOUNT = 100;
-const int    DOUBLE_PRECISION = 10000; ///< Four digits after the point.
+#include "videomemory.h"
 
 #define SPU_GET_ELEM_INFO __LINE__, __FILE__, __func__
 
@@ -47,9 +45,9 @@ struct SPU_error
 struct SPU_struct
 {
     Stack stk;
-    Stack call_stk;
 
     Processor_t ram_array[RAM_AMOUNT];
+    Stack call_stk;
 
     int register_vars[REG_NUMBER];
 
@@ -71,8 +69,16 @@ void        SPU_dump    (SPU_struct* spu, SPU_DUMP_RECIEVE_INFO);
 
 void        SPU_process (const char* const spu_file_name);
 
-SPU_error   Processor (const unsigned char spu_code[],
-                       const size_t        code_length,
-                       SPU_struct* const   spu);
+SPU_error   Processor   (const unsigned char*       spu_code,
+                         const size_t               code_length,
+                               SPU_struct   * const spu);
+
+void GetArguments (const unsigned char         n_operation,
+                   const unsigned char * const spu_code,
+                         size_t        * const code_index,
+                         unsigned char * const reg_arg,
+                         int           * const dec_arg,
+                         Processor_t   * const reg_arg_value,
+                         SPU_struct    * const spu);
 
 #endif

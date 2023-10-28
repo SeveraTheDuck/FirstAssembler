@@ -1,0 +1,28 @@
+        jmp :main
+
+:factorial
+        push rax
+        push 1
+        je :factorial_ret
+
+        push rax
+        push 1
+        sub
+        pop rax
+
+        push rax
+        call :factorial
+        mul
+
+:factorial_ret
+        ret
+
+:main
+        push 6
+        pop rax
+
+        push rax
+        call :factorial
+        out
+
+        hlt

@@ -1,7 +1,8 @@
-#include "headers/disassembler.h"
+#include "../headers/disassembler.h"
 
 static const size_t MAX_DECODED_FILE_SIZE =
                     MAX_TRANSLATED_FILE_SIZE * sizeof (int);
+
 static const unsigned char OPERATION_NUMBER_MASK = 0x1F;
 
 void DecodeFile (const char* const translated_file_name,
@@ -44,9 +45,10 @@ void DecodeFile (const char* const translated_file_name,
     }
 
 void Decoder (const unsigned char* const spu_code,
-              const size_t spu_code_length,
-              const char* const decoded_file_name)
+              const size_t               spu_code_length,
+              const char         * const decoded_file_name)
 {
+    assert (spu_code);
     assert (decoded_file_name);
 
     unsigned char command = 0;
@@ -60,7 +62,7 @@ void Decoder (const unsigned char* const spu_code,
 
         switch (command & OPERATION_NUMBER_MASK)
         {
-            #include "headers/commands.h"
+            #include "../headers/commands.h"
 
             default:
             {
@@ -80,8 +82,8 @@ void Decoder (const unsigned char* const spu_code,
     }
 
     WriteToFile (decoded_file_name,
-                             decoded_file_array,
-                             decoded_file_index);
+                 decoded_file_array,
+                 decoded_file_index);
 }
 
 #undef DEF_CMD
@@ -102,37 +104,66 @@ void WriteToFile (const char* const decoded_file_name,
     fclose (decoded_file);
 }
 
-void PrintArgs (const unsigned char command,
+void PrintArgs (const unsigned char        command,
                 const unsigned char* const spu_code,
-                size_t* const spu_code_index,
-                char* const decoded_file_array,
-                int* const decoded_file_index)
+                      size_t       * const spu_code_index,
+                      char         * const decoded_file_array,
+                      int          * const decoded_file_index)
 {
     assert (spu_code);
     assert (spu_code_index);
     assert (decoded_file_array);
     assert (decoded_file_index);
 
-    unsigned char reg_name = 0;
-    int dec_argument       = 0;
+    unsigned char reg_name     = 0;
+    int           dec_argument = 0;
 
-    if (command & RAM_REGIME)
+    if (command & RAM_MODE)
     {
         decoded_file_array[(*decoded_file_index)++] = '[';
     }
 
-    if (command & REGISTER_REGIME)
+    PrintRegisterArgument (command, spu_code, spu_code_index,
+                           decoded_file_array, decoded_file_index,
+                          &reg_name);
+
+    PrintNumericArgument  (command, spu_code, spu_code_index,
+                           decoded_file_array, decoded_file_index,
+                          &dec_argument);
+
+    if (command & RAM_MODE)
     {
-        reg_name = spu_code[(*spu_code_index)++] + 'a';
+        decoded_file_array[(*decoded_file_index)++] = ']';
+    }
+}
+
+void PrintRegisterArgument (const unsigned char        command,
+                            const unsigned char* const spu_code,
+                                  size_t       * const spu_code_index,
+                                  char         * const decoded_file_array,
+                                  int          * const decoded_file_index,
+                                  unsigned char* const reg_name)
+{
+    if (command & REGISTER_MODE)
+    {
+        *reg_name = spu_code[(*spu_code_index)++] + 'a';
 
         *decoded_file_index +=
             snprintf (decoded_file_array + *decoded_file_index,
-                      sizeof ("rax "), "r%cx ", reg_name);
+                      sizeof ("rax "), "r%cx ", *reg_name);
     }
+}
 
-    if (command & STANDART_REGIME)
+void PrintNumericArgument  (const unsigned char        command,
+                            const unsigned char* const spu_code,
+                                  size_t       * const spu_code_index,
+                                  char         * const decoded_file_array,
+                                  int          * const decoded_file_index,
+                                  int          * const dec_argument)
+{
+    if (command & STANDART_MODE)
     {
-        memcpy ((void*) &dec_argument, spu_code + *spu_code_index,
+        memcpy ((void*) dec_argument, spu_code + *spu_code_index,
                 sizeof (int));
         *spu_code_index += sizeof (int);
 
@@ -140,28 +171,23 @@ void PrintArgs (const unsigned char command,
                         (command & OPERATION_NUMBER_MASK) <= ASM_JNE) ||
                         (command & OPERATION_NUMBER_MASK) == ASM_CALL) // HARDCODING!!!
         {
-            SetDisasmLabel (dec_argument,
-                            decoded_file_array,
-                            decoded_file_index);
+            SetDisasmLabel (*dec_argument,
+                             decoded_file_array,
+                             decoded_file_index);
         }
 
         else
         {
             *decoded_file_index +=
                 snprintf (decoded_file_array + *decoded_file_index,
-                        sizeof (int), "%d", dec_argument);
+                          sizeof (int), "%d", *dec_argument);
         }
-    }
-
-    if (command & RAM_REGIME)
-    {
-        decoded_file_array[(*decoded_file_index)++] = ']';
     }
 }
 
-void SetDisasmLabel (const int   dec_argument,
-                     char* const decoded_file_array,
-                     int * const decoded_file_index)
+void SetDisasmLabel (const int         dec_argument,
+                           char* const decoded_file_array,
+                           int * const decoded_file_index)
 {
     assert (decoded_file_array);
     assert (decoded_file_index);
@@ -170,6 +196,6 @@ void SetDisasmLabel (const int   dec_argument,
 
     *decoded_file_index +=
         snprintf (decoded_file_array + *decoded_file_index,
-                 MAX_WORD_LENGTH, "label_%zd %0X",
-                 number_of_labels++, dec_argument);
+                  MAX_WORD_LENGTH, "label_%zd %0X",
+                  number_of_labels++, dec_argument);
 }

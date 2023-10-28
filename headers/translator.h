@@ -45,4 +45,8 @@ void GetLabel (const int           function_number,
                      Label * const labels_array,
                      size_t*       n_labels);
 
+void SetUnknownLabel (const char  * const need_label_name,
+                            Label * const labels_array,
+                            size_t*       n_labels);
+
 #endif

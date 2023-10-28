@@ -1,4 +1,4 @@
-#include "headers/SPU.h"
+#include "../headers/SPU.h"
 
 static const size_t MAX_FILE_SIZE         = 0x1000;
 static const int    OPERATION_NUMBER_MASK = 0x1F;
@@ -77,6 +77,9 @@ void SPU_dump (SPU_struct* spu, SPU_DUMP_RECIEVE_INFO)
                                                   spu->init_line,
                                                   spu->init_func);
     fprintf (stderr, "called from %s(%d) %s()\n", file_name, line, func_name);
+
+    PrintMemory (spu->ram_array);
+
     STACK_DUMP (&spu->stk);
 }
 
@@ -89,8 +92,8 @@ void SPU_process (const char* const spu_file_name)
 
     unsigned char spu_code[MAX_FILE_SIZE] = {};
     size_t code_length = 0;
-    code_length = fread (spu_code, sizeof (char), MAX_FILE_SIZE,
-                         spu_file);
+    code_length = fread (spu_code, sizeof (char),
+                         MAX_FILE_SIZE, spu_file);
 
     fclose(spu_file);
 
@@ -98,29 +101,36 @@ void SPU_process (const char* const spu_file_name)
     SPU_CTOR (&spu, SPU_GET_ELEM_INFO);
 
     Processor (spu_code, code_length, &spu);
+    PrintMemory (spu.ram_array);
 
     SPU_DTOR (&spu);
 }
 
 #define DEF_CMD(function_name, function_number, n_args, action) \
     case ASM_##function_name:                                   \
+                                                                \
         SPU_VERIFY (spu);                                       \
+                                                                \
+        GetArguments (n_operation, spu_code, &code_index,       \
+                     &reg_arg, &dec_arg, &reg_arg_value, spu);  \
         action                                                  \
+                                                                \
         SPU_VERIFY (spu);                                       \
+                                                                \
         break;
 
-SPU_error Processor (const unsigned char spu_code[MAX_FILE_SIZE],
-                     const size_t        code_length,
-                     SPU_struct* const   spu)
+SPU_error Processor (const unsigned char*       spu_code,
+                     const size_t               code_length,
+                           SPU_struct   * const spu)
 {
     assert (spu_code);
     SPU_VERIFY (spu);
 
-    unsigned char n_operation  = 0;
-    unsigned char reg_arg      = 0;
-    int  dec_arg               = 0;
-    size_t code_index          = 0;
-    Processor_t reg_arg_value  = 0;
+    unsigned char n_operation   = 0;
+    unsigned char reg_arg       = 0;
+    int           dec_arg       = 0;
+    size_t        code_index    = 0;
+    Processor_t   reg_arg_value = 0;
 
     while (code_index < code_length)
     {
@@ -131,25 +141,9 @@ SPU_error Processor (const unsigned char spu_code[MAX_FILE_SIZE],
         dec_arg       = 0;
         reg_arg_value = 0;
 
-        if (n_operation & REGISTER_REGIME)
-        {
-            memcpy (&reg_arg, spu_code + code_index, sizeof (char));
-            code_index += sizeof (char);
-
-            reg_arg_value = spu->register_vars[reg_arg];
-        }
-
-        if (n_operation & STANDART_REGIME)
-        {
-            memcpy (&dec_arg, spu_code + code_index, sizeof (int));
-            code_index += sizeof (int);
-
-            dec_arg *= DOUBLE_PRECISION;
-        }
-
         switch (n_operation & OPERATION_NUMBER_MASK)
         {
-            #include "headers/commands.h"
+            #include "../headers/commands.h"
         }
     }
 
@@ -158,3 +152,35 @@ SPU_error Processor (const unsigned char spu_code[MAX_FILE_SIZE],
 }
 
 #undef DEF_CMD
+
+void GetArguments (const unsigned char         n_operation,
+                   const unsigned char * const spu_code,
+                         size_t        * const code_index,
+                         unsigned char * const reg_arg,
+                         int           * const dec_arg,
+                         Processor_t   * const reg_arg_value,
+                         SPU_struct    * const spu)
+{
+    assert (spu_code);
+    assert (code_index);
+    assert (reg_arg);
+    assert (dec_arg);
+    assert (reg_arg_value);
+    assert (spu);
+
+    if (n_operation & REGISTER_MODE)
+    {
+        memcpy (reg_arg, spu_code + *code_index, sizeof (char));
+        *code_index += sizeof (char);
+
+        *reg_arg_value = spu->register_vars[*reg_arg];
+    }
+
+    if (n_operation & STANDART_MODE)
+    {
+        memcpy (dec_arg, spu_code + *code_index, sizeof (int));
+        *code_index += sizeof (int);
+
+        *dec_arg *= DOUBLE_PRECISION;
+    }
+}

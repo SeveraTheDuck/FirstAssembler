@@ -26,8 +26,22 @@ void PrintArgs (const unsigned char command,
                 char* const decoded_file_array,
                 int* const decoded_file_index);
 
-void SetDisasmLabel (const int   dec_argument,
-                     char* const decoded_file_array,
-                     int * const decoded_file_index);
+void PrintRegisterArgument (const unsigned char        command,
+                            const unsigned char* const spu_code,
+                                  size_t       * const spu_code_index,
+                                  char         * const decoded_file_array,
+                                  int          * const decoded_file_index,
+                                  unsigned char* const reg_name);
+
+void PrintNumericArgument  (const unsigned char        command,
+                            const unsigned char* const spu_code,
+                                  size_t       * const spu_code_index,
+                                  char         * const decoded_file_array,
+                                  int          * const decoded_file_index,
+                                  int          * const dec_argument);
+
+void SetDisasmLabel (const int         dec_argument,
+                           char* const decoded_file_array,
+                           int * const decoded_file_index);
 
 #endif
