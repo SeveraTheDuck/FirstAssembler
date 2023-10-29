@@ -5,13 +5,13 @@ DEF_CMD (HLT, 0x00, 0,
 
 DEF_CMD (PUSH, 0x01, 2,
 {
-    int push_value = 0;
+    Processor_t push_value = 0;
 
     if (n_operation & RAM_MODE)
     {
         dec_arg /= DOUBLE_PRECISION;
         reg_arg_value /= DOUBLE_PRECISION;
-        push_value = spu->ram_array[dec_arg + reg_arg_value];
+        push_value = (Processor_t) spu->ram_array[dec_arg + reg_arg_value];
     }
     else
     {
@@ -132,13 +132,13 @@ DEF_CMD (CALL, 0x10, 1,
 
 DEF_CMD (RET, 0x11, 0,
 {
-    int dest_operation = 0;
+    Processor_t dest_operation = 0;
 
     StackPop (&spu->call_stk, &dest_operation);
 
     if (dest_operation < 0)
     {
-        fprintf (stderr, "Wrong return address: %d", dest_operation);
+        fprintf (stderr, "Wrong return address: " OUTPUT_F "\n", dest_operation);
         abort (); // do not abort?
     }
     code_index = (size_t) dest_operation;
@@ -199,4 +199,22 @@ DEF_CMD (DIV_MODULE, 0x15, 0,
     result = l_operator % r_operator;
 
     StackPush (&spu->stk, result);
+})
+
+DEF_CMD (SQUARE, 0x16, 0,
+{
+    Processor_t dec_value   = 0;
+    double      float_value = 0;
+    StackPop (&spu->stk, &dec_value);
+
+    float_value = (double) dec_value / DOUBLE_PRECISION;
+    float_value *= float_value;
+    dec_value = (Processor_t) float_value * DOUBLE_PRECISION;
+
+    StackPush (&spu->stk, dec_value);
+})
+
+DEF_CMD (MEM_PRINT, 0x17, 0,
+{
+    PrintMemory (spu->ram_array);
 })

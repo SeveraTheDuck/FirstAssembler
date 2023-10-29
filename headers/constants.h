@@ -8,7 +8,7 @@
 #include "../config.h"
 
 const size_t LABEL_MAX_LENGTH = 0x100;
-const size_t RAM_AMOUNT       = 0x100;
+const size_t RAM_AMOUNT       = 0x400;
 const int    DOUBLE_PRECISION = 10000; ///< Four digits after the point.
 const size_t REG_NUMBER       = 4;
 

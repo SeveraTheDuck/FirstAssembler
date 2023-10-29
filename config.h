@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-typedef int Processor_t;
+typedef long long Processor_t;
 
 /// @brief This typedef defines type for elements of stack. Change it to the type you like.
 typedef Processor_t Elem_t;
@@ -11,7 +11,7 @@ typedef Processor_t Elem_t;
 const Elem_t POISON = -31415926;
 
 /// @brief This define is for output specificator of Elem_t.
-#define OUTPUT_F "%d"
+#define OUTPUT_F "%lld"
 
 /// @brief This define is for debug regime.
 /// It provides more complex output for STACK_DUMP() and more information in stack struct.

@@ -54,7 +54,7 @@ void Decoder (const unsigned char* const spu_code,
     unsigned char command = 0;
     size_t spu_code_index = 0;
     char   decoded_file_array[MAX_DECODED_FILE_SIZE] = {};
-    int decoded_file_index = 0;
+    int    decoded_file_index = 0;
 
     while (spu_code_index < spu_code_length)
     {
@@ -69,6 +69,8 @@ void Decoder (const unsigned char* const spu_code,
                 decoded_file_index +=
                     snprintf (decoded_file_array + decoded_file_index,
                               MAX_WORD_LENGTH, "Command not found.");
+
+                fprintf (stderr, "Command %d not found.\n", command);
 
                 WriteToFile (decoded_file_name,
                              decoded_file_array,
@@ -150,7 +152,7 @@ void PrintRegisterArgument (const unsigned char        command,
 
         *decoded_file_index +=
             snprintf (decoded_file_array + *decoded_file_index,
-                      sizeof ("rax "), "r%cx ", *reg_name);
+                      sizeof ("rax  "), "r%cx ", *reg_name);
     }
 }
 
@@ -180,7 +182,7 @@ void PrintNumericArgument  (const unsigned char        command,
         {
             *decoded_file_index +=
                 snprintf (decoded_file_array + *decoded_file_index,
-                          sizeof (int), "%d", *dec_argument);
+                          sizeof (int) + 1, "%d", *dec_argument);
         }
     }
 }

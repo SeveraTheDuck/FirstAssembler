@@ -1,20 +1,68 @@
         jmp :main
 
-:WriteCircle
-        push 0
+; Get center coordinates
+:GetCirclePosition
+        in
+        pop rax
+        in
+        pop rbx
+
+        ret
+
+:GetCircleRadius
+        in
         pop rcx
 
-:MakePoint
+        ret
 
+; Check wether the point is in the circle
+:CheckPoint
+        push rdx
+        push 32
+        div_module
+        push rax
+        sub
+        square
 
-        push 256
+        push rdx
+        push 32
+        div
+        push rbx
+        sub
+        square
+
+        add
         push rcx
-        jb :MakePoint
+        square
+
+        jae :MakePoint
+
+:NextIteration
+        push rdx
+        push 1
+        add
+        pop rdx
+
+        push rdx
+        push 1024
+        ja :CheckPoint
+
+        ret
+
+; Write in RAM if the point is in circle
+:MakePoint
+        push 1
+        pop [rdx]
+        jmp :NextIteration
 
 :main
-        push 8
-        pop rax
-        push 8
-        pop rbx
-        call :WriteCircle
+        call :GetCirclePosition
+        call :GetCircleRadius
+
+        push 0
+        pop rdx
+        call :CheckPoint
+
+        mem_print
+
         hlt

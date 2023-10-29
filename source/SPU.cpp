@@ -101,7 +101,6 @@ void SPU_process (const char* const spu_file_name)
     SPU_CTOR (&spu, SPU_GET_ELEM_INFO);
 
     Processor (spu_code, code_length, &spu);
-    PrintMemory (spu.ram_array);
 
     SPU_DTOR (&spu);
 }

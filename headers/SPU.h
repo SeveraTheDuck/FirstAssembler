@@ -49,7 +49,7 @@ struct SPU_struct
     Processor_t ram_array[RAM_AMOUNT];
     Stack call_stk;
 
-    int register_vars[REG_NUMBER];
+    Processor_t register_vars[REG_NUMBER];
 
     SPU_error spu_errors_list;
 

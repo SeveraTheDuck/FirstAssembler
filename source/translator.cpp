@@ -7,7 +7,7 @@ static const size_t CMD_MAX_LENGTH    = 0x100;
 static const size_t LABELS_MAX_NUMBER = 0x400;
 
 /// @brief Max size of the asm file.
-static const size_t FILE_MAX_SIZE     = 0x1000; // FIXME: make dynamic?
+static const size_t FILE_MAX_SIZE     = 0x1000;
 
 /// @brief Array of translated commands and numbers.
 /// Will be pushed in translated file via fwrite().
@@ -61,7 +61,7 @@ void TranslateFile (const char* const original_file_name,
     else
 
 FILE* Translator (file_input* const original_file,
-                  FILE*       const translated_file)
+                  FILE      * const translated_file)
 {
     assert (original_file);
     assert (translated_file);
@@ -74,7 +74,9 @@ FILE* Translator (file_input* const original_file,
 
     for (size_t n_line = 0; n_line < original_file->number_of_lines; ++n_line)
     {
-        if (original_file->lines_array[n_line].line[0] == '\0')
+        // ';' is used to write comments
+        if (original_file->lines_array[n_line].line[0] == '\0' ||
+            original_file->lines_array[n_line].line[0] == ';')
         {
             continue;
         }
@@ -183,6 +185,14 @@ void TranslateArguments (const int  function_number,
         memcpy (translated_string + translated_string_index,
                &decimal_argument, sizeof (int));
         translated_string_index += sizeof (int);
+    }
+
+    // When function has to have args but none valid received.
+    if (((function_number & STANDART_MODE) |
+         (function_number & REGISTER_MODE)) == 0)
+    {
+        fprintf (stderr, "Wrong arguments for function number %d\n",
+                 function_number);
     }
 }
 
