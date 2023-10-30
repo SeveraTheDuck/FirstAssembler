@@ -17,6 +17,12 @@ run_decoding: $(BIN_DIR)main_decoding.o $(BIN_DIR)disassembler.o $(HEADERS)comma
 run_processor: $(BIN_DIR)main_processor.o $(BIN_DIR)SPU.o $(BIN_DIR)videomemory.o $(BIN_DIR)stack.o $(BIN_DIR)hash.o $(BIN_DIR)errors.o $(HEADERS)commands.h $(HEADERS)constants.h $(HEADERS)SPU.h config.h
 	@$(CC) $(FLAGS) $(BIN_DIR)main_processor.o $(BIN_DIR)SPU.o $(BIN_DIR)videomemory.o $(BIN_DIR)stack.o $(BIN_DIR)errors.o $(BIN_DIR)hash.o -o $(RUN_DIR)$@
 
+everything:
+	make run_program
+	make run_translation
+	make run_decoding
+	make run_processor
+
 $(BIN_DIR)main.o: $(SOURCE_DIR)main.cpp
 	@$(CC) $(FLAGS) $(SOURCE_DIR)main.cpp -c -o $(BIN_DIR)main.o
 
