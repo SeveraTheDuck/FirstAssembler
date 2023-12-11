@@ -116,8 +116,8 @@ void DoFixups (const Label* const labels_array)
     for (size_t i = 0; i < n_label_fixups; ++i)
     {
         memcpy (translated_string + label_fixups_array[i].label_address,
-              &(labels_array[label_fixups_array[i].label_id].
-                label_address), sizeof (int));
+              &(labels_array[label_fixups_array[i].label_id]
+               .label_address), sizeof (int));
     }
 }
 

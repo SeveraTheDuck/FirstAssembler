@@ -15,7 +15,7 @@ const int SCALE        = SCREEN_HEIGHT / ELEM_IN_LINE;
 
 void PrintMemory (const Processor_t* const ram_array);
 
-void MakeScreen (SDL_Window** window, SDL_Renderer** renderer);
+void MakeScreen  (SDL_Window** window, SDL_Renderer** renderer);
 
 void ColorPoints (const Processor_t * const ram_array,
                         SDL_Renderer* const renderer);

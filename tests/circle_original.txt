@@ -1,6 +1,8 @@
         jmp :main
 
-; Get center coordinates
+; GetCirclePosition - function that gets coordinates of the center of the circle
+; Param  - none
+; Return - rax = x, rbx = y
 :GetCirclePosition
         in
         pop rax
@@ -9,13 +11,18 @@
 
         ret
 
+; GetCircleRadius - function that gets radius of the circle
+; Param  - none
+; Return - rcx = r
 :GetCircleRadius
         in
         pop rcx
 
         ret
 
-; Check wether the point is in the circle
+; CheckPoint - function thar checks wether the point is in the circle
+; Param - rax = x, rbx = y, rcx = r, rdx = num_of_point in array
+; If the point is in the circle, jmp to :MakePoint, else :NextIteration
 :CheckPoint
         push rdx
         push 32
@@ -38,9 +45,7 @@
         jae :MakePoint
 
 :NextIteration
-        push rdx
-        push 1
-        add
+        push rdx 1
         pop rdx
 
         push rdx

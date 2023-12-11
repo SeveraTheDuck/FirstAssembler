@@ -29,11 +29,11 @@ int main (int programm_argc, char** programm_argv)
     }
 
     fprintf (stderr, "Wrong process input. Choose one out of three:\n"
-                        "1. --translate to translate file from assembly "
-                        "to binary language. Asm file required.\n"
-                        "2. --decode    to translate file from binary "
-                        "to assembly language. Binary file required.\n"
-                        "3. --spu       to run process. Binary file required."
+                     "1. --translate to translate file from assembly "
+                     "to binary language. Asm file required.\n"
+                     "2. --decode    to translate file from binary "
+                     "to assembly language. Binary file required.\n"
+                     "3. --spu       to run process. Binary file required."
             );
     return 1;
 }

@@ -151,7 +151,7 @@ DEF_CMD (SQRT, 0x12, 0,
 
     StackPop (&spu->stk, &sqrt_value);
     float_value = (double) sqrt_value / DOUBLE_PRECISION;
-    sqrt_value = (Processor_t) (sqrt (float_value) * DOUBLE_PRECISION);
+    sqrt_value = (Processor_t) (sqrt (float_value) * DOUBLE_PRECISION); // i
 
     StackPush (&spu->stk, sqrt_value);
 })
@@ -192,7 +192,6 @@ DEF_CMD (DIV_MODULE, 0x15, 0,
     if (r_operator == 0)
     {
         fprintf (stderr, "DIVIDING BY ZERO IS FORBIDDEN IN MATH");
-                                                                    // ADD DIVIDING BY ZERO ERROR
         return spu->spu_errors_list;
     }
 

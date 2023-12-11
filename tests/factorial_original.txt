@@ -1,6 +1,14 @@
-        jmp :main
-
+        call :main
+        hlt
+;
+; factorial - function that finds a factorial of n
+;
+; Param:    rax - n
+; Return: rax - factorial result
+;
 :factorial
+        push rax
+
         push rax
         push 1
         je :factorial_ret
@@ -10,7 +18,6 @@
         sub
         pop rax
 
-        push rax
         call :factorial
         mul
 
@@ -21,8 +28,7 @@
         push 6
         pop rax
 
-        push rax
         call :factorial
         out
 
-        hlt
+        ret
