@@ -105,17 +105,17 @@ void SPU_process (const char* const spu_file_name)
     SPU_DTOR (&spu);
 }
 
-#define DEF_CMD(function_name, function_number, n_args, action) \
-    case ASM_##function_name:                                   \
-                                                                \
-        SPU_VERIFY (spu);                                       \
-                                                                \
-        GetArguments (n_operation, spu_code, &code_index,       \
-                     &reg_arg, &dec_arg, &reg_arg_value, spu);  \
-        action                                                  \
-                                                                \
-        SPU_VERIFY (spu);                                       \
-                                                                \
+#define DEF_CMD(function_name, function_number, n_args, action)     \
+    case ASM_##function_name:                                       \
+                                                                    \
+        SPU_VERIFY (spu);                                           \
+                                                                    \
+        GetArguments (n_operation, spu_code, &code_index,           \
+                     &reg_arg, &float_arg, &reg_arg_value, spu);    \
+        action                                                      \
+                                                                    \
+        SPU_VERIFY (spu);                                           \
+                                                                    \
         break;
 
 SPU_error Processor (const unsigned char*       spu_code,
@@ -127,7 +127,7 @@ SPU_error Processor (const unsigned char*       spu_code,
 
     unsigned char n_operation   = 0;
     unsigned char reg_arg       = 0;
-    int           dec_arg       = 0;
+    double        float_arg     = 0;
     size_t        code_index    = 0;
     Processor_t   reg_arg_value = 0;
 
@@ -137,7 +137,7 @@ SPU_error Processor (const unsigned char*       spu_code,
         code_index += sizeof (unsigned char);
 
         reg_arg       = 0;
-        dec_arg       = 0;
+        float_arg     = 0;
         reg_arg_value = 0;
 
         switch (n_operation & OPERATION_NUMBER_MASK)
@@ -156,14 +156,14 @@ void GetArguments (const unsigned char         n_operation,
                    const unsigned char * const spu_code,
                          size_t        * const code_index,
                          unsigned char * const reg_arg,
-                         int           * const dec_arg,
+                         double        * const float_arg,
                          Processor_t   * const reg_arg_value,
                          SPU_struct    * const spu)
 {
     assert (spu_code);
     assert (code_index);
     assert (reg_arg);
-    assert (dec_arg);
+    assert (float_arg);
     assert (reg_arg_value);
     assert (spu);
 
@@ -177,9 +177,7 @@ void GetArguments (const unsigned char         n_operation,
 
     if (n_operation & STANDART_MODE)
     {
-        memcpy (dec_arg, spu_code + *code_index, sizeof (int));
-        *code_index += sizeof (int);
-
-        *dec_arg *= DOUBLE_PRECISION;
+        memcpy (float_arg, spu_code + *code_index, sizeof (double));
+        *code_index += sizeof (double);
     }
 }

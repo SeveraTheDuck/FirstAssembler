@@ -6,6 +6,8 @@
 #include "constants.h"
 #include "videomemory.h"
 
+#define DOUBLE_CMP(arg1, arg2) fabs (arg1 - arg2) <= __FLT_EPSILON__
+
 #define SPU_GET_ELEM_INFO __LINE__, __FILE__, __func__
 
 #define SPU_CTOR_RECIVE_INFO const size_t       init_line,      \
@@ -77,7 +79,7 @@ void GetArguments (const unsigned char         n_operation,
                    const unsigned char * const spu_code,
                          size_t        * const code_index,
                          unsigned char * const reg_arg,
-                         int           * const dec_arg,
+                         double        * const float_arg,
                          Processor_t   * const reg_arg_value,
                          SPU_struct    * const spu);
 

@@ -9,13 +9,13 @@ DEF_CMD (PUSH, 0x01, 2,
 
     if (n_operation & RAM_MODE)
     {
-        dec_arg /= DOUBLE_PRECISION;
-        reg_arg_value /= DOUBLE_PRECISION;
-        push_value = (Processor_t) spu->ram_array[dec_arg + reg_arg_value];
+        push_value = spu->ram_array[(int64_t) float_arg +
+                                    (int64_t) reg_arg_value];
     }
+
     else
     {
-        push_value = dec_arg + reg_arg_value;
+        push_value = float_arg + reg_arg_value;
     }
 
     StackPush (&spu->stk, push_value);
@@ -25,10 +25,10 @@ DEF_CMD (POP, 0x02, 2,
 {
     if (n_operation & RAM_MODE)
     {
-        dec_arg /= DOUBLE_PRECISION;
-        reg_arg_value /= DOUBLE_PRECISION;
-        StackPop (&spu->stk, &spu->ram_array[dec_arg + reg_arg_value]);
+        StackPop (&spu->stk, &spu->ram_array[(int64_t) float_arg +
+                                             (int64_t) reg_arg_value]);
     }
+
     else
     {
         StackPop (&spu->stk, &spu->register_vars[reg_arg]);
@@ -37,24 +37,19 @@ DEF_CMD (POP, 0x02, 2,
 
 DEF_CMD (IN, 0x03, 0,
 {
-    double float_in_value        = 0;
-    Processor_t decimal_in_value = 0;
+    double float_in_value = 0;
 
     printf ("Enter in value:\n");
     scanf  ("%lg", &float_in_value);
 
-    decimal_in_value = (Processor_t) (float_in_value * DOUBLE_PRECISION);
-
-    StackPush (&spu->stk, decimal_in_value);
+    StackPush (&spu->stk, float_in_value);
 })
 
 DEF_CMD (OUT, 0x04, 0,
 {
-    Processor_t decimal_output_value = 0;
-    double float_output_value        = 0;
+    double float_output_value = 0;
 
-    StackPop (&spu->stk, &decimal_output_value);
-    float_output_value = (double) decimal_output_value / DOUBLE_PRECISION;
+    StackPop (&spu->stk, &float_output_value);
 
     fprintf (stderr, "%lg\n", float_output_value);
 })
@@ -89,9 +84,7 @@ DEF_CMD (MUL, 0x07, 0,
     StackPop  (&spu->stk, &r_operator);
     StackPop  (&spu->stk, &l_operator);
 
-    l_operator /= DOUBLE_PRECISION; // overflow expected if not divide
-    r_operator /= DOUBLE_PRECISION;
-    Processor_t output_value = l_operator * r_operator * DOUBLE_PRECISION;
+    Processor_t output_value = l_operator * r_operator;
 
     StackPush (&spu->stk, output_value);
 })
@@ -105,13 +98,13 @@ DEF_CMD (DIV, 0x08, 0,
     StackPop  (&spu->stk, &r_operator);
     StackPop  (&spu->stk, &l_operator);
 
-    if (r_operator == 0)
+    if (DOUBLE_CMP (r_operator, 0))
     {
         fprintf (stderr, "DIVIDING BY ZERO IS FORBIDDEN IN MATH");
         return spu->spu_errors_list;
     }
 
-    result = (int) ((double) (l_operator) / r_operator * DOUBLE_PRECISION);
+    result = l_operator / r_operator;
 
     StackPush (&spu->stk, result);
 })
@@ -119,9 +112,10 @@ DEF_CMD (DIV, 0x08, 0,
 #include "jumps.h"
 // jump.h counter stops at number 0x0F, so next is 0x10.
 
-DEF_CMD (CALL, 0x10, 1,
+//???
+DEF_CMD (CALL, 0x0F, 1,
 {
-    code_index -= sizeof (int);
+    code_index -= sizeof (double);
     StackPush (&spu->call_stk, (Elem_t) (code_index + sizeof (int)));
 
     int dest_operation = 0;
@@ -130,9 +124,9 @@ DEF_CMD (CALL, 0x10, 1,
     code_index = (size_t) dest_operation;
 })
 
-DEF_CMD (RET, 0x11, 0,
+DEF_CMD (RET, 0x10, 0,
 {
-    Processor_t dest_operation = 0;
+    double dest_operation = 0;
 
     StackPop (&spu->call_stk, &dest_operation);
 
@@ -144,43 +138,40 @@ DEF_CMD (RET, 0x11, 0,
     code_index = (size_t) dest_operation;
 })
 
-DEF_CMD (SQRT, 0x12, 0,
+DEF_CMD (SQRT, 0x11, 0,
 {
     Processor_t sqrt_value  = 0;
     double      float_value = 0;
 
-    StackPop (&spu->stk, &sqrt_value);
-    float_value = (double) sqrt_value / DOUBLE_PRECISION;
-    sqrt_value = (Processor_t) (sqrt (float_value) * DOUBLE_PRECISION); // i
+    StackPop (&spu->stk, &float_value);
+    sqrt_value = sqrt (float_value); // i
 
     StackPush (&spu->stk, sqrt_value);
 })
 
-DEF_CMD (SIN, 0x13, 0,
+DEF_CMD (SIN, 0x12, 0,
 {
     Processor_t sin_value   = 0;
     double      float_value = 0;
 
-    StackPop (&spu->stk, &sin_value);
-    float_value = (double) sin_value / DOUBLE_PRECISION;
-    sin_value = (Processor_t) (sin (float_value) * DOUBLE_PRECISION);
+    StackPop (&spu->stk, &float_value);
+    sin_value = sin (float_value);
 
     StackPush (&spu->stk, sin_value);
 })
 
-DEF_CMD (COS, 0x14, 0,
+DEF_CMD (COS, 0x13, 0,
 {
     Processor_t cos_value   = 0;
     double      float_value = 0;
 
-    StackPop (&spu->stk, &cos_value);
-    float_value = (double) cos_value / DOUBLE_PRECISION;
-    cos_value = (Processor_t) (cos (float_value) * DOUBLE_PRECISION);
+    StackPop (&spu->stk, &float_value);
+    cos_value = cos (float_value);
 
     StackPush (&spu->stk, cos_value);
 })
 
-DEF_CMD (DIV_MODULE, 0x15, 0,
+DEF_CMD (DIV_MODULE, 0x14, 0,
 {
     Processor_t l_operator  = 0;
     Processor_t r_operator  = 0;
@@ -189,31 +180,118 @@ DEF_CMD (DIV_MODULE, 0x15, 0,
     StackPop  (&spu->stk, &r_operator);
     StackPop  (&spu->stk, &l_operator);
 
-    if (r_operator == 0)
+    if (DOUBLE_CMP (r_operator, 0))
     {
         fprintf (stderr, "DIVIDING BY ZERO IS FORBIDDEN IN MATH");
         return spu->spu_errors_list;
     }
 
-    result = l_operator % r_operator;
+    result = (int64_t) l_operator % (int64_t) r_operator;
 
     StackPush (&spu->stk, result);
 })
 
-DEF_CMD (SQUARE, 0x16, 0,
+DEF_CMD (POW, 0x15, 0,
 {
-    Processor_t dec_value   = 0;
-    double      float_value = 0;
-    StackPop (&spu->stk, &dec_value);
+    double float_value = 0;
+    double power       = 0;
 
-    float_value = (double) dec_value / DOUBLE_PRECISION;
-    float_value *= float_value;
-    dec_value = (Processor_t) float_value * DOUBLE_PRECISION;
+    StackPop (&spu->stk, &power);
+    StackPop (&spu->stk, &float_value);
 
-    StackPush (&spu->stk, dec_value);
+    float_value = pow (float_value, power);
+
+    StackPush (&spu->stk, float_value);
 })
 
-DEF_CMD (MEM_PRINT, 0x17, 0,
+DEF_CMD (IS_EQUAL, 0x16, 0,
+{
+    double left_value  = 0;
+    double right_value = 0;
+
+    StackPop (&spu->stk, &right_value);
+    StackPop (&spu->stk, &left_value);
+
+    // bool answer = DOUBLE_CMP (right_value - left_value, 0);
+
+    StackPush (&spu->stk, left_value);
+})
+
+DEF_CMD (GREATER, 0x17, 0,
+{
+    double left_value  = 0;
+    double right_value = 0;
+
+    StackPop (&spu->stk, &right_value);
+    StackPop (&spu->stk, &left_value);
+
+    StackPush (&spu->stk, right_value - left_value > __FLT_EPSILON__);
+})
+
+DEF_CMD (LESS, 0x18, 0,
+{
+    double left_value  = 0;
+    double right_value = 0;
+
+    StackPop (&spu->stk, &right_value);
+    StackPop (&spu->stk, &left_value);
+
+    StackPush (&spu->stk, right_value - left_value < -__FLT_EPSILON__);
+})
+
+DEF_CMD (GOE, 0x19, 0,
+{
+    double left_value  = 0;
+    double right_value = 0;
+
+    StackPop (&spu->stk, &right_value);
+    StackPop (&spu->stk, &left_value);
+
+    StackPush (&spu->stk, right_value - left_value > -__FLT_EPSILON__);
+})
+
+DEF_CMD (LOE, 0x1A, 0,
+{
+    double left_value  = 0;
+    double right_value = 0;
+
+    StackPop (&spu->stk, &right_value);
+    StackPop (&spu->stk, &left_value);
+
+    StackPush (&spu->stk, right_value - left_value < __FLT_EPSILON__);
+})
+
+DEF_CMD (NOT_EQUAL, 0x1B, 0,
+{
+    double left_value  = 0;
+    double right_value = 0;
+
+    StackPop (&spu->stk, &right_value);
+    StackPop (&spu->stk, &left_value);
+
+    StackPush (&spu->stk, !(DOUBLE_CMP (right_value - left_value, 0)));
+})
+
+DEF_CMD (NOT, 0x1C, 0,
+{
+    double float_value = 0;
+
+    StackPop (&spu->stk, &float_value);
+
+    StackPush (&spu->stk, !(DOUBLE_CMP (float_value, 0)));
+})
+
+DEF_CMD (LN, 0x1D, 0,
+{
+    double float_value = 0;
+
+    StackPop (&spu->stk, &float_value);
+    float_value = log (float_value);
+
+    StackPush (&spu->stk, float_value);
+})
+
+DEF_CMD (MEM_PRINT, 0x1E, 0,
 {
     PrintMemory (spu->ram_array);
 })

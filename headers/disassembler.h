@@ -38,9 +38,9 @@ void PrintNumericArgument  (const unsigned char        command,
                                   size_t       * const spu_code_index,
                                   char         * const decoded_file_array,
                                   int          * const decoded_file_index,
-                                  int          * const dec_argument);
+                                  double       * const float_argument);
 
-void SetDisasmLabel (const int         dec_argument,
+void SetDisasmLabel (const int         label_argument,
                            char* const decoded_file_array,
                            int * const decoded_file_index);
 

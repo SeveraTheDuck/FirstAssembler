@@ -130,10 +130,10 @@ void ReadArguments (const char  *       original_line,
     assert (labels_array);
     assert (n_labels);
 
-    int  n_read_args    = 0;
-    int  d_arg          = 0;
-    char r_arg[2]       = {};
-    char label_name[LABEL_MAX_LENGTH] = {};
+    int    n_read_args = 0;
+    double f_arg       = 0;
+    char   r_arg[2]    = {};
+    char   label_name[LABEL_MAX_LENGTH] = {};
 
     size_t original_line_length = strlen (original_line);
 
@@ -158,17 +158,17 @@ void ReadArguments (const char  *       original_line,
     }
 
     if (sscanf (original_line + n_read_args,
-                "%d", &d_arg) == 1)
+                "%lg", &f_arg) == 1)
     {
         function_number |= STANDART_MODE;
     }
 
-    TranslateArguments (function_number, d_arg, r_arg[0] - 'a');
+    TranslateArguments (function_number, f_arg, r_arg[0] - 'a');
 }
 
-void TranslateArguments (const int  function_number,
-                         const int  decimal_argument,
-                         const char register_argument)
+void TranslateArguments (const int    function_number,
+                         const double float_argument,
+                         const char   register_argument)
 {
     *(translated_string + translated_string_index) = (char) function_number;
     translated_string_index += sizeof (char);
@@ -183,8 +183,8 @@ void TranslateArguments (const int  function_number,
     if (function_number & STANDART_MODE)
     {
         memcpy (translated_string + translated_string_index,
-               &decimal_argument, sizeof (int));
-        translated_string_index += sizeof (int);
+               &float_argument, sizeof (double));
+        translated_string_index += sizeof (double);
     }
 
     // When function has to have args but none valid received.

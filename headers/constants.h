@@ -18,7 +18,7 @@ const size_t REG_NUMBER       = 4;
 enum OperationsDecode
 {
     #include "commands.h"
-    ASM_VERSION = 2
+    // ASM_VERSION = 2
 };
 
 #undef DEF_CMD

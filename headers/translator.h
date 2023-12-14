@@ -32,9 +32,9 @@ void ReadArguments (const char  *       original_line,
                           Label * const labels_array,
                           size_t*       n_labels);
 
-void TranslateArguments (const int  function_number,
-                         const int  decimal_argument,
-                         const char register_argument);
+void TranslateArguments (const int     function_number,
+                         const double  float_argument,
+                         const char    register_argument);
 
 void SetLabel (const char  * const original_line,
                      Label * const labels_array,

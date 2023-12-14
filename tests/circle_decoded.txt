@@ -1,4 +1,4 @@
-0	JMP label_0 54
+0	JMP label_0 81
 5	IN 
 6	POP rax 
 8	IN 
@@ -9,34 +9,36 @@ D	POP rcx
 F	RET 
 10	PUSH rdx 
 12	PUSH 32
-17	DIV_MODULE 
-18	PUSH rax 
-1A	SUB 
-1B	SQUARE 
-1C	PUSH rdx 
-1E	PUSH 32
-23	DIV 
-24	PUSH rbx 
-26	SUB 
-27	SQUARE 
-28	ADD 
-29	PUSH rcx 
-2B	SQUARE 
-2C	JAE label_1 48
-31	PUSH rdx 
-33	PUSH 1
-38	ADD 
-39	POP rdx 
-3B	PUSH rdx 
-3D	PUSH 1024
-42	JA label_2 10
-47	RET 
-48	PUSH 1
-4D	POP [rdx ]
-4F	JMP label_3 31
-54	CALL label_4 5
-59	CALL label_5 C
-5E	PUSH 0
-63	POP rdx 
-65	CALL label_6 10
-6A	HLT 
+1B	DIV_MODULE 
+1C	PUSH rax 
+1E	SUB 
+1F	PUSH 2
+28	POW 
+29	PUSH rdx 
+2B	PUSH 32
+34	DIV 
+35	PUSH rbx 
+37	SUB 
+38	PUSH 2
+41	POW 
+42	ADD 
+43	PUSH rcx 
+45	PUSH 2
+4E	POW 
+4F	JAE label_1 71
+54	PUSH rdx 1
+5E	POP rdx 
+60	PUSH rdx 
+62	PUSH 1024
+6B	JA label_2 10
+70	RET 
+71	PUSH 1
+7A	POP [rdx ]
+7C	JMP label_3 54
+81	CALL label_4 5
+86	CALL label_5 C
+8B	PUSH 0
+94	POP rdx 
+96	CALL label_6 10
+9B	HLT 
+9C	HLT 

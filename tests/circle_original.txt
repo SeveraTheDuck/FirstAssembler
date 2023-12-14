@@ -29,18 +29,21 @@
         div_module
         push rax
         sub
-        square
+        push 2
+        pow
 
         push rdx
         push 32
         div
         push rbx
         sub
-        square
+        push 2
+        pow
 
         add
         push rcx
-        square
+        push 2
+        pow
 
         jae :MakePoint
 

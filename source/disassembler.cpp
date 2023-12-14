@@ -117,8 +117,8 @@ void PrintArgs (const unsigned char        command,
     assert (decoded_file_array);
     assert (decoded_file_index);
 
-    unsigned char reg_name     = 0;
-    int           dec_argument = 0;
+    unsigned char reg_name       = 0;
+    double        float_argument = 0;
 
     if (command & RAM_MODE)
     {
@@ -131,7 +131,7 @@ void PrintArgs (const unsigned char        command,
 
     PrintNumericArgument  (command, spu_code, spu_code_index,
                            decoded_file_array, decoded_file_index,
-                          &dec_argument);
+                          &float_argument);
 
     if (command & RAM_MODE)
     {
@@ -161,33 +161,39 @@ void PrintNumericArgument  (const unsigned char        command,
                                   size_t       * const spu_code_index,
                                   char         * const decoded_file_array,
                                   int          * const decoded_file_index,
-                                  int          * const dec_argument)
+                                  double       * const float_argument)
 {
     if (command & STANDART_MODE)
     {
-        memcpy ((void*) dec_argument, spu_code + *spu_code_index,
-                sizeof (int));
-        *spu_code_index += sizeof (int);
-
         if ((ASM_JMP <= (command & OPERATION_NUMBER_MASK) &&
-                        (command & OPERATION_NUMBER_MASK) <= ASM_JNE) ||
+                        (command & OPERATION_NUMBER_MASK) <= ASM_JE) ||
                         (command & OPERATION_NUMBER_MASK) == ASM_CALL) // HARDCODING!!!
         {
-            SetDisasmLabel (*dec_argument,
-                             decoded_file_array,
-                             decoded_file_index);
+            int label_argument = 0;
+
+            memcpy (&label_argument, spu_code + *spu_code_index,
+                    sizeof (int));
+            *spu_code_index += sizeof (int);
+
+            SetDisasmLabel (label_argument,
+                            decoded_file_array,
+                            decoded_file_index);
         }
 
         else
         {
+            memcpy ((void*) float_argument, spu_code + *spu_code_index,
+                    sizeof (double));
+            *spu_code_index += sizeof (double);
+
             *decoded_file_index +=
                 snprintf (decoded_file_array + *decoded_file_index,
-                          sizeof (int) + 1, "%d", *dec_argument);
+                          sizeof (double) + 1, "%lg", *float_argument);
         }
     }
 }
 
-void SetDisasmLabel (const int         dec_argument,
+void SetDisasmLabel (const int         label_argument,
                            char* const decoded_file_array,
                            int * const decoded_file_index)
 {
@@ -199,5 +205,5 @@ void SetDisasmLabel (const int         dec_argument,
     *decoded_file_index +=
         snprintf (decoded_file_array + *decoded_file_index,
                   MAX_WORD_LENGTH, "label_%zd %0X",
-                  number_of_labels++, dec_argument);
+                  number_of_labels++, label_argument);
 }
